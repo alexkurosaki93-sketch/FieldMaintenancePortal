@@ -10,7 +10,7 @@
       margin: 0;
       font-family: Arial, sans-serif;
       background: #ffffff;
-      overflow: hidden; /* prevent page scroll */
+      overflow: hidden;
     }
 
     header {
@@ -29,13 +29,13 @@
 
     /* Full screen container */
     .container {
-      padding-top: 50px;   /* space for header */
+      padding-top: 50px;    /* space for header */
       padding-bottom: 60px; /* space for bottom nav */
       height: 100vh;
       box-sizing: border-box;
     }
 
-    /* Each tab full height */
+    /* Tabs */
     .tab {
       width: 100%;
       height: 100%;
@@ -46,7 +46,7 @@
       display: block;
     }
 
-    /* Full screen crop box */
+    /* Crop box */
     .sheet-crop-box {
       width: 100%;
       height: 100%;
@@ -55,7 +55,7 @@
       background: white;
     }
 
-    /* Desktop iframe */
+    /* Desktop iframe settings */
     .sheet-crop-box iframe {
       width: 1400px;
       height: 1000px;
@@ -63,27 +63,28 @@
       transform: scale(0.85);
       transform-origin: top left;
       position: absolute;
-      top: -140px;   /* hides Google Sheet header text */
+      top: -95px;   /* PERFECT crop (keeps DASHBOARD heading visible) */
       left: -70px;
     }
 
-    /* Mobile responsive zoom */
+    /* Tablet */
     @media (max-width: 768px) {
       .sheet-crop-box iframe {
         width: 1200px;
         height: 1000px;
         transform: scale(0.70);
-        top: -160px;
+        top: -110px;
         left: -90px;
       }
     }
 
+    /* Mobile */
     @media (max-width: 480px) {
       .sheet-crop-box iframe {
         width: 1200px;
         height: 1000px;
         transform: scale(0.63);
-        top: -170px;
+        top: -115px;
         left: -110px;
       }
     }
@@ -101,6 +102,88 @@
       padding: 10px 0;
       z-index: 999;
     }
+
+    .bottom-nav button {
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-weight: bold;
+      color: #0d47a1;
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .bottom-nav button.active {
+      background: #0d47a1;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>DT Maintenance App</header>
+
+<div class="container">
+
+  <!-- DASHBOARD TAB -->
+  <div id="tabDashboard" class="tab active">
+    <div class="sheet-crop-box">
+      <iframe 
+        src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pubhtml?gid=0&single=true">
+      </iframe>
+    </div>
+  </div>
+
+  <!-- DOWNLOADS TAB -->
+  <div id="tabDownloads" class="tab">
+    <h2 style="text-align:center; margin-top:30px;">Downloads Coming Soon</h2>
+  </div>
+
+  <!-- FORM TAB -->
+  <div id="tabForm" class="tab">
+    <h2 style="text-align:center; margin-top:30px;">Form Coming Soon</h2>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button id="btnDashboard" class="active" onclick="showTab('dashboard')">Dashboard</button>
+  <button id="btnDownloads" onclick="showTab('downloads')">Downloads</button>
+  <button id="btnForm" onclick="showTab('form')">Form</button>
+</div>
+
+<script>
+  function showTab(tab) {
+    document.getElementById("tabDashboard").classList.remove("active");
+    document.getElementById("tabDownloads").classList.remove("active");
+    document.getElementById("tabForm").classList.remove("active");
+
+    document.getElementById("btnDashboard").classList.remove("active");
+    document.getElementById("btnDownloads").classList.remove("active");
+    document.getElementById("btnForm").classList.remove("active");
+
+    if (tab === "dashboard") {
+      document.getElementById("tabDashboard").classList.add("active");
+      document.getElementById("btnDashboard").classList.add("active");
+    }
+
+    if (tab === "downloads") {
+      document.getElementById("tabDownloads").classList.add("active");
+      document.getElementById("btnDownloads").classList.add("active");
+    }
+
+    if (tab === "form") {
+      document.getElementById("tabForm").classList.add("active");
+      document.getElementById("btnForm").classList.add("active");
+    }
+  }
+</script>
+
+</body>
+</html>    }
 
     .bottom-nav button {
       background: none;
