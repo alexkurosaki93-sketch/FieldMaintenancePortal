@@ -167,15 +167,6 @@
 
     .download-btn:hover {background:#15803d;}
 
-    iframe {
-      width:100%;
-      height:900px;
-      border:none;
-      border-radius:12px;
-      background:white;
-      box-shadow:0px 2px 8px rgba(0,0,0,0.1);
-    }
-
     /* LOGIN PAGE */
     .login-box {
       max-width:420px;
@@ -219,6 +210,30 @@
       font-size:13px;
       margin-top:10px;
       font-weight:bold;
+    }
+
+    .form-card {
+      text-align:center;
+      padding:30px;
+      background:white;
+      border-radius:12px;
+      box-shadow:0px 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .form-btn {
+      display:inline-block;
+      padding:15px 25px;
+      background:#2563eb;
+      color:white;
+      border-radius:12px;
+      text-decoration:none;
+      font-size:16px;
+      font-weight:bold;
+      margin-top:15px;
+    }
+
+    .form-btn:hover {
+      background:#1d4ed8;
     }
   </style>
 </head>
@@ -321,20 +336,19 @@
 
     <!-- FORM TAB -->
     <div id="formTab" class="tab-content">
-      <h3>📝 Submit Field Report</h3>
-      <p class="smalltext">Fill the form below to submit your work update.</p>
+      <div class="form-card">
+        <h2 style="margin-top:0;">📝 Submit Field Report</h2>
+        <p class="smalltext">
+          Google Form cannot open inside this app due to Google security restrictions.<br>
+          Please open the form in browser.
+        </p>
 
-      <div style="text-align:center; padding:20px;">
-  <h3>📝 Submit Field Report</h3>
-  <p class="smalltext">Google Form cannot open inside app. Please open in browser.</p>
-
-  <a href="https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform"
-     target="_blank"
-     style="display:inline-block; padding:15px 20px; background:#2563eb; color:white; border-radius:10px; text-decoration:none; font-weight:bold;">
-     ✅ Open Form
-  </a>
-</div>
-
+        <a class="form-btn"
+           href="https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform"
+           target="_blank">
+           ✅ Open Google Form
+        </a>
+      </div>
     </div>
 
   </div>
@@ -347,22 +361,19 @@
 
 <script>
   // ===========================
-  // ADMIN LOGIN (HARDCODED)
-  // ===========================
-  const ADMIN_USERNAME = "porag.das";
-  const ADMIN_PASSWORD = "gknayakg07";
-
-  // ===========================
   // HARDCODED USERS LIST
   // ===========================
   const HARDCODED_USERS = [
+    { username: "porag.das", password: "gknayakg07", role: "ADMIN" },
+
     { username: "Rhittik.bt@maintenance.in", password: "rhittik@123", role: "ADMIN" },
     { username: "Ritam.M@maintenance.in", password: "ritam@123", role: "ADMIN" },
-    { username: "executive3", password: "1234", role: "EXECUTIVE" },
 
-    { username: "tech1", password: "1234", role: "TECHNICIAN" },
-    { username: "tech2", password: "1234", role: "TECHNICIAN" },
-    { username: "tech3", password: "1234", role: "TECHNICIAN" }
+    { username: "executive3", password: "1234", role: "ADMIN" },
+
+    { username: "tech1", password: "1234", role: "ADMIN" },
+    { username: "tech2", password: "1234", role: "ADMIN" },
+    { username: "tech3", password: "1234", role: "ADMIN" }
   ];
 
   let currentUser = null;
@@ -383,19 +394,6 @@
 
     msgBox.innerText = "";
 
-    // Admin login
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      currentUser = username;
-      currentRole = "ADMIN";
-
-      localStorage.setItem("logged_user", username);
-      localStorage.setItem("logged_role", currentRole);
-
-      showApp();
-      return;
-    }
-
-    // Hardcoded users login
     let found = HARDCODED_USERS.find(u => u.username === username && u.password === password);
 
     if (!found) {
