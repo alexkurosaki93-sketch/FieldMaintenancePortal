@@ -391,15 +391,27 @@
 
   function getUsers() {
   let users = localStorage.getItem("users_list");
+  let userArray = users ? JSON.parse(users) : [];
 
+  // DEFAULT USERS (AUTO ADD)
   let defaultUsers = [
-    { username: "Rhittik.bt@maintenance.in", password: "Rhittik@123", role: "EXECUTIVE" }
+    { username: "executive1", password: "1234", role: "EXECUTIVE" },
+    { username: "executive2", password: "1234", role: "EXECUTIVE" }
   ];
 
-  if (!users) {
-    localStorage.setItem("users_list", JSON.stringify(defaultUsers));
-    return defaultUsers;
-  }
+  // Add missing default users automatically
+  defaultUsers.forEach(defUser => {
+    if (!userArray.find(u => u.username === defUser.username)) {
+      userArray.push(defUser);
+    }
+  });
+
+  // Save back updated list
+  localStorage.setItem("users_list", JSON.stringify(userArray));
+
+  return userArray;
+}
+
 
   return JSON.parse(users);
 }
