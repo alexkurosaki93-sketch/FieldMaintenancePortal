@@ -63,6 +63,354 @@
       transform: scale(0.85);
       transform-origin: top left;
       position: absolute;
+      top: -140px;
+      left: -70px;
+    }
+
+    /* Mobile responsive zoom */
+    @media (max-width: 768px) {
+      .sheet-crop-box iframe {
+        width: 1200px;
+        height: 1000px;
+        transform: scale(0.70);
+        top: -160px;
+        left: -90px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .sheet-crop-box iframe {
+        width: 1200px;
+        height: 1000px;
+        transform: scale(0.63);
+        top: -170px;
+        left: -110px;
+      }
+    }
+
+    /* Bottom navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid #ddd;
+      padding: 10px 0;
+      z-index: 999;
+    }
+
+    .bottom-nav button {
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-weight: bold;
+      color: #0d47a1;
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .bottom-nav button.active {
+      background: #0d47a1;
+      color: white;
+    }
+
+    /* LOGIN SCREEN */
+    #loginScreen {
+      position: fixed;
+      top: 50px;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .login-box {
+      width: 90%;
+      max-width: 380px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    }
+
+    .login-box h2 {
+      margin-top: 0;
+      text-align: center;
+      color: #0d47a1;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .login-btn {
+      width: 100%;
+      margin-top: 15px;
+      padding: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #0d47a1;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .login-btn:hover {
+      background: #08367d;
+    }
+
+    .error {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    /* Password Eye */
+    .password-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .password-wrapper input {
+      padding-right: 40px;
+    }
+
+    .eye-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 18px;
+      user-select: none;
+    }
+
+    /* Hide elements until login */
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>DT Maintenance App</header>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h2>🔐 Login</h2>
+
+    <input type="text" id="username" placeholder="Username" />
+
+    <div class="password-wrapper">
+      <input type="password" id="password" placeholder="Password" />
+      <span class="eye-btn" onclick="togglePassword()">👁</span>
+    </div>
+
+    <button class="login-btn" onclick="login()">Login</button>
+
+    <div id="loginError" class="error"></div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- DASHBOARD TAB -->
+  <div id="tabDashboard" class="tab active">
+    <div class="sheet-crop-box">
+      <iframe 
+        src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pubhtml?gid=0&single=true">
+      </iframe>
+    </div>
+  </div>
+
+  <!-- DOWNLOADS TAB -->
+  <div id="tabDownloads" class="tab">
+    <h2 style="text-align:center; margin-top:30px;">Downloads Coming Soon</h2>
+  </div>
+
+  <!-- FORM TAB -->
+  <div id="tabForm" class="tab">
+    <h2 style="text-align:center; margin-top:30px;">Form Coming Soon</h2>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav hidden" id="bottomNav">
+  <button id="btnDashboard" class="active" onclick="showTab('dashboard')">Dashboard</button>
+  <button id="btnDownloads" onclick="showTab('downloads')">Downloads</button>
+  <button id="btnForm" onclick="showTab('form')">Form</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<script>
+  // ==========================
+  // FIXED ADMIN LOGIN
+  // ==========================
+  const ADMIN_USERNAME = "porag.das";
+  const ADMIN_PASSWORD = "gknayakg07";
+
+  // ==========================
+  // MANUAL USERS LIST (ADD HERE)
+  // ==========================
+  const USERS = [
+    {
+      username: "Rhittik.bt@maintenance.in",
+      password: "Rhittik@123",
+      role: "executive"
+    },
+    {
+      username: "demo.tech@maintenance.in",
+      password: "Tech@123",
+      role: "technician"
+    }
+  ];
+
+  // ==========================
+  // PASSWORD EYE
+  // ==========================
+  function togglePassword() {
+    let passField = document.getElementById("password");
+    passField.type = (passField.type === "password") ? "text" : "password";
+  }
+
+  // ==========================
+  // LOGIN FUNCTION
+  // ==========================
+  function login() {
+    let user = document.getElementById("username").value.trim();
+    let pass = document.getElementById("password").value.trim();
+    let err = document.getElementById("loginError");
+
+    err.innerText = "";
+
+    if (!user || !pass) {
+      err.innerText = "Enter username and password";
+      return;
+    }
+
+    // ADMIN LOGIN
+    if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
+      localStorage.setItem("loggedInUser", user);
+      localStorage.setItem("loggedInRole", "admin");
+      startApp();
+      return;
+    }
+
+    // CHECK MANUAL USERS
+    let found = USERS.find(u => u.username === user && u.password === pass);
+
+    if (!found) {
+      err.innerText = "❌ Access Denied";
+      return;
+    }
+
+    localStorage.setItem("loggedInUser", found.username);
+    localStorage.setItem("loggedInRole", found.role);
+
+    startApp();
+  }
+
+  // ==========================
+  // START APP AFTER LOGIN
+  // ==========================
+  function startApp() {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("bottomNav").classList.remove("hidden");
+  }
+
+  // ==========================
+  // LOGOUT
+  // ==========================
+  function logout() {
+    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("loggedInRole");
+    location.reload();
+  }
+
+  // ==========================
+  // AUTO LOGIN
+  // ==========================
+  if (localStorage.getItem("loggedInUser")) {
+    startApp();
+  }
+
+  // ==========================
+  // TAB FUNCTION (UNCHANGED)
+  // ==========================
+  function showTab(tab) {
+    document.getElementById("tabDashboard").classList.remove("active");
+    document.getElementById("tabDownloads").classList.remove("active");
+    document.getElementById("tabForm").classList.remove("active");
+
+    document.getElementById("btnDashboard").classList.remove("active");
+    document.getElementById("btnDownloads").classList.remove("active");
+    document.getElementById("btnForm").classList.remove("active");
+
+    if (tab === "dashboard") {
+      document.getElementById("tabDashboard").classList.add("active");
+      document.getElementById("btnDashboard").classList.add("active");
+    }
+
+    if (tab === "downloads") {
+      document.getElementById("tabDownloads").classList.add("active");
+      document.getElementById("btnDownloads").classList.add("active");
+    }
+
+    if (tab === "form") {
+      document.getElementById("tabForm").classList.add("active");
+      document.getElementById("btnForm").classList.add("active");
+    }
+  }
+</script>
+
+</body>
+</html>
+    /* Each tab full height */
+    .tab {
+      width: 100%;
+      height: 100%;
+      display: none;
+    }
+
+    .tab.active {
+      display: block;
+    }
+
+    /* Full screen crop box */
+    .sheet-crop-box {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+      background: white;
+    }
+
+    /* Desktop iframe */
+    .sheet-crop-box iframe {
+      width: 1400px;
+      height: 1000px;
+      border: none;
+      transform: scale(0.85);
+      transform-origin: top left;
+      position: absolute;
       top: -140px;   /* hides Google Sheet header text */
       left: -70px;
     }
