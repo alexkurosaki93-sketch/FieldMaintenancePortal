@@ -220,13 +220,6 @@
       margin-top:10px;
       font-weight:bold;
     }
-
-    .success-text {
-      color:green;
-      font-size:13px;
-      margin-top:10px;
-      font-weight:bold;
-    }
   </style>
 </head>
 
@@ -334,38 +327,6 @@
       <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform?embedded=true"></iframe>
     </div>
 
-    <!-- ACCESS MANAGEMENT TAB (ADMIN ONLY) -->
-    <div id="accessTab" class="tab-content">
-      <h3>🔐 Access Management</h3>
-      <p class="smalltext">Admin can add or remove users here.</p>
-
-      <div class="table-area">
-        <h3>Add New User</h3>
-
-        <input type="text" id="newUsername" placeholder="Enter Username"/>
-        <input type="password" id="newPassword" placeholder="Enter Password"/>
-
-        <select id="newRole">
-          <option value="EXECUTIVE">EXECUTIVE</option>
-          <option value="TECHNICIAN">TECHNICIAN</option>
-          <option value="ADMIN">ADMIN</option>
-        </select>
-
-        <button class="export-btn" onclick="addUser()">➕ Add User</button>
-
-        <div id="accessMsg" class="success-text"></div>
-      </div>
-
-      <div class="table-area">
-        <h3>Existing Users</h3>
-
-        <table id="usersTable">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
   </div>
 
   <footer>
@@ -375,8 +336,24 @@
 </div>
 
 <script>
+  // ===========================
+  // ADMIN LOGIN (HARDCODED)
+  // ===========================
   const ADMIN_USERNAME = "porag.das";
   const ADMIN_PASSWORD = "gknayakg07";
+
+  // ===========================
+  // HARDCODED USERS LIST
+  // ===========================
+  const HARDCODED_USERS = [
+    { username: "executive1", password: "1234", role: "EXECUTIVE" },
+    { username: "executive2", password: "1234", role: "EXECUTIVE" },
+    { username: "executive3", password: "1234", role: "EXECUTIVE" },
+
+    { username: "tech1", password: "1234", role: "TECHNICIAN" },
+    { username: "tech2", password: "1234", role: "TECHNICIAN" },
+    { username: "tech3", password: "1234", role: "TECHNICIAN" }
+  ];
 
   let currentUser = null;
   let currentRole = null;
@@ -389,16 +366,6 @@
   const DATA_URL =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pub?gid=405039605&single=true&output=csv";
 
-  function getUsers() {
-    let users = localStorage.getItem("users_list");
-    if (!users) return [];
-    return JSON.parse(users);
-  }
-
-  function saveUsers(users) {
-    localStorage.setItem("users_list", JSON.stringify(users));
-  }
-
   function login() {
     let username = document.getElementById("loginUsername").value.trim();
     let password = document.getElementById("loginPassword").value.trim();
@@ -406,17 +373,20 @@
 
     msgBox.innerText = "";
 
+    // Admin login
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       currentUser = username;
       currentRole = "ADMIN";
+
       localStorage.setItem("logged_user", username);
       localStorage.setItem("logged_role", currentRole);
+
       showApp();
       return;
     }
 
-    let users = getUsers();
-    let found = users.find(u => u.username === username && u.password === password);
+    // Hardcoded users login
+    let found = HARDCODED_USERS.find(u => u.username === username && u.password === password);
 
     if (!found) {
       msgBox.innerText = "❌ Access Denied (Invalid Username or Password)";
@@ -459,10 +429,6 @@
     setInterval(() => {
       loadData();
     }, 300000);
-
-    if (currentRole === "ADMIN") {
-      renderUsersTable();
-    }
   }
 
   function buildTabsByRole() {
@@ -474,10 +440,6 @@
       { id: "sheetTab", name: "📑 Master Sheet" },
       { id: "formTab", name: "📝 Submit Form" }
     ];
-
-    if (currentRole === "ADMIN") {
-      tabs.push({ id: "accessTab", name: "🔐 Access" });
-    }
 
     tabs.forEach(tab => {
       let btn = document.createElement("button");
@@ -903,66 +865,6 @@
     a.click();
 
     URL.revokeObjectURL(url);
-  }
-
-  function addUser() {
-    let username = document.getElementById("newUsername").value.trim();
-    let password = document.getElementById("newPassword").value.trim();
-    let role = document.getElementById("newRole").value;
-
-    let msg = document.getElementById("accessMsg");
-    msg.innerText = "";
-
-    if (!username || !password) {
-      msg.innerText = "❌ Please enter username and password.";
-      msg.style.color = "red";
-      return;
-    }
-
-    let users = getUsers();
-
-    if (users.find(u => u.username === username)) {
-      msg.innerText = "❌ Username already exists.";
-      msg.style.color = "red";
-      return;
-    }
-
-    users.push({ username, password, role });
-    saveUsers(users);
-
-    msg.innerText = "✅ User Added Successfully!";
-    msg.style.color = "green";
-
-    document.getElementById("newUsername").value = "";
-    document.getElementById("newPassword").value = "";
-
-    renderUsersTable();
-  }
-
-  function deleteUser(username) {
-    let users = getUsers();
-    users = users.filter(u => u.username !== username);
-    saveUsers(users);
-    renderUsersTable();
-  }
-
-  function renderUsersTable() {
-    let users = getUsers();
-
-    let head = document.querySelector("#usersTable thead");
-    let body = document.querySelector("#usersTable tbody");
-
-    head.innerHTML = "<tr><th>Username</th><th>Role</th><th>Delete</th></tr>";
-    body.innerHTML = "";
-
-    users.forEach(u => {
-      let tr = "<tr>";
-      tr += `<td>${u.username}</td>`;
-      tr += `<td>${u.role}</td>`;
-      tr += `<td><button class="download-btn" style="background:#ef4444;" onclick="deleteUser('${u.username}')">Delete</button></td>`;
-      tr += "</tr>";
-      body.innerHTML += tr;
-    });
   }
 
   window.onload = function() {
