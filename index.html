@@ -1,40 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Field Maintenance Portal</title>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DT Maintenance App</title>
 
   <style>
-    body {font-family: Arial, sans-serif; margin:0; background:#f4f6f9; color:#222;}
-
-    header {
-      text-align:center;
-      padding:15px;
-      background:#1e293b;
-      color:white;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      overflow: hidden; /* prevent page scroll */
     }
 
-    header h2 {margin:5px; font-size:22px;}
-    header p {margin:0; font-size:14px; opacity:0.9;}
+    header {
+      background: #0d47a1;
+      color: white;
+      padding: 12px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 999;
+    }
 
-    .container {padding:15px;}
+    /* Full screen container */
+    .container {
+      padding-top: 50px;   /* space for header */
+      padding-bottom: 60px; /* space for bottom nav */
+      height: 100vh;
+      box-sizing: border-box;
+    }
 
-    .tabs {display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;}
-    .tab-btn {
-      flex:1;
-      padding:12px;
-      border:none;
-      background:#e2e8f0;
-      color:#111;
-      font-size:15px;
-      border-radius:10px;
-      cursor:pointer;
-      font-weight:bold;
-      min-width:120px;
+    /* Each tab full height */
+    .tab {
+      width: 100%;
+      height: 100%;
+      display: none;
+    }
+
+    .tab.active {
+      display: block;
+    }
+
+    /* Full screen crop box */
+    .sheet-crop-box {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: relative;
+      background: white;
+    }
+
+    /* Desktop iframe */
+    .sheet-crop-box iframe {
+      width: 1400px;
+      height: 1000px;
+      border: none;
+      transform: scale(0.85);
+      transform-origin: top left;
+      position: absolute;
+      top: -140px;   /* hides Google Sheet header text */
+      left: -70px;
+    }
+
+    /* Mobile responsive zoom */
+    @media (max-width: 768px) {
+      .sheet-crop-box iframe {
+        width: 1200px;
+        height: 1000px;
+        transform: scale(0.70);
+        top: -160px;
+        left: -90px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .sheet-crop-box iframe {
+        width: 1200px;
+        height: 1000px;
+        transform: scale(0.63);
+        top: -170px;
+        left: -110px;
+      }
+    }
+
+    /* Bottom navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid #ddd;
+      padding: 10px 0;
+      z-index: 999;
+    }
+
+    .bottom-nav button {
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-weight: bold;
+      color: #0d47a1;
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .bottom-nav button.active {
+      background: #0d47a1;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>DT Maintenance App</header>
+
+<div class="container">
+
+  <!-- DASHBOARD TAB -->
+  <div id="tabDashboard" class="tab active">
+    <div class="sheet-crop-box">
+      <iframe 
+        src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pubhtml?gid=0&single=true">
+      </iframe>
+    </div>
+  </div>
+
+  <!-- DOWNLOADS TAB -->
+  <div id="tabDownloads" class="tab">
+    <h2 style="text-align:center; margin-top:30px;">Downloads Coming Soon</h2>
+  </div>
+
+  <!-- FORM TAB -->
+  <div id="tabForm" class="tab">
+    <h2 style="text-align:center; margin-top:30px;">Form Coming Soon</h2>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button id="btnDashboard" class="active" onclick="showTab('dashboard')">Dashboard</button>
+  <button id="btnDownloads" onclick="showTab('downloads')">Downloads</button>
+  <button id="btnForm" onclick="showTab('form')">Form</button>
+</div>
+
+<script>
+  function showTab(tab) {
+    document.getElementById("tabDashboard").classList.remove("active");
+    document.getElementById("tabDownloads").classList.remove("active");
+    document.getElementById("tabForm").classList.remove("active");
+
+    document.getElementById("btnDashboard").classList.remove("active");
+    document.getElementById("btnDownloads").classList.remove("active");
+    document.getElementById("btnForm").classList.remove("active");
+
+    if (tab === "dashboard") {
+      document.getElementById("tabDashboard").classList.add("active");
+      document.getElementById("btnDashboard").classList.add("active");
+    }
+
+    if (tab === "downloads") {
+      document.getElementById("tabDownloads").classList.add("active");
+      document.getElementById("btnDownloads").classList.add("active");
+    }
+
+    if (tab === "form") {
+      document.getElementById("tabForm").classList.add("active");
+      document.getElementById("btnForm").classList.add("active");
+    }
+  }
+</script>
+
+</body>
+</html>      min-width:120px;
     }
     .tab-btn.active {background:#2563eb; color:white;}
 
