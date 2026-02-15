@@ -1,1018 +1,573 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Field Maintenance Portal</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DT Maintenance App</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+    overflow: hidden;
+  }
 
-  <style>
-    body {font-family: Arial, sans-serif; margin:0; background:#f4f6f9; color:#222;}
+  header {
+    background: #0d47a1;
+    color: white;
+    padding: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+  }
 
-    header {
-      text-align:center;
-      padding:15px;
-      background:#1e293b;
-      color:white;
+  .container {
+    padding-top: 55px;
+    padding-bottom: 65px;
+    height: 100vh;
+    box-sizing: border-box;
+  }
+
+  /* Login box */
+  .login-box {
+    max-width: 420px;
+    margin: auto;
+    padding: 20px;
+  }
+
+  .login-box h2 {
+    text-align: center;
+    color: #0d47a1;
+  }
+
+  input {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+
+  /* Password wrapper with eye */
+  .password-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  .password-wrapper input {
+    padding-right: 45px; /* space for eye icon */
+  }
+
+  .eye-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    color: #0d47a1;
+    user-select: none;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    border-radius: 10px;
+    border: none;
+    background: #0d47a1;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #08367d;
+  }
+
+  .error {
+    color: crimson;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  /* Tabs */
+  .tab {
+    width: 100%;
+    height: 100%;
+    display: none;
+  }
+
+  .tab.active {
+    display: block;
+  }
+
+  /* Crop box for Google Sheets */
+  .sheet-crop-box {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    background: white;
+  }
+
+  .sheet-crop-box iframe {
+    width: 1400px;
+    height: 1000px;
+    border: none;
+    transform: scale(0.85);
+    transform-origin: top left;
+    position: absolute;
+    top: -95px;
+    left: -70px;
+  }
+
+  /* Mobile adjustments */
+  @media (max-width: 768px) {
+    .sheet-crop-box iframe {
+      width: 1200px;
+      height: 1000px;
+      transform: scale(0.70);
+      top: -110px;
+      left: -90px;
     }
+  }
 
-    header h2 {margin:5px; font-size:22px;}
-    header p {margin:0; font-size:14px; opacity:0.9;}
-
-    .container {padding:15px;}
-
-    .tabs {display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;}
-    .tab-btn {
-      flex:1;
-      padding:12px;
-      border:none;
-      background:#e2e8f0;
-      color:#111;
-      font-size:15px;
-      border-radius:10px;
-      cursor:pointer;
-      font-weight:bold;
-      min-width:120px;
+  @media (max-width: 480px) {
+    .sheet-crop-box iframe {
+      width: 1200px;
+      height: 1000px;
+      transform: scale(0.63);
+      top: -115px;
+      left: -110px;
     }
-    .tab-btn.active {background:#2563eb; color:white;}
+  }
 
-    .tab-content {display:none;}
-    .tab-content.active {display:block;}
+  /* Form iframe */
+  .form-box {
+    width: 100%;
+    height: 100%;
+  }
 
-    .refresh-btn {
-      width:100%;
-      padding:12px;
-      border:none;
-      background:#2563eb;
-      color:white;
-      font-size:15px;
-      border-radius:10px;
-      cursor:pointer;
-      margin-bottom:15px;
-      font-weight:bold;
-    }
-    .refresh-btn:hover {background:#1d4ed8;}
+  .form-box iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
 
-    .logout-btn {
-      width:100%;
-      padding:12px;
-      border:none;
-      background:#ef4444;
-      color:white;
-      font-size:15px;
-      border-radius:10px;
-      cursor:pointer;
-      margin-bottom:15px;
-      font-weight:bold;
-    }
-    .logout-btn:hover {background:#dc2626;}
+  /* Admin Panel */
+  .admin-panel {
+    padding: 15px;
+    overflow-y: auto;
+    height: 100%;
+    box-sizing: border-box;
+    background: #f4f6fb;
+  }
 
-    .status {text-align:center; font-size:13px; margin-bottom:10px; font-weight:bold;}
+  .admin-card {
+    background: white;
+    padding: 15px;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    margin-bottom: 15px;
+  }
 
-    .kpi-grid {
-      display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap:12px;
-      margin-bottom:15px;
-    }
+  .admin-card h3 {
+    margin: 0;
+    color: #0d47a1;
+  }
 
-    .kpi-card {
-      background:white;
-      padding:15px;
-      border-radius:12px;
-      text-align:center;
-      box-shadow:0px 2px 8px rgba(0,0,0,0.1);
-    }
+  .admin-card p {
+    color: #444;
+    font-size: 13px;
+  }
 
-    .kpi-card h3 {font-size:14px; margin:0; color:#555;}
-    .kpi-card p {font-size:22px; margin:8px 0 0; font-weight:bold; color:#2563eb;}
+  .save-btn {
+    background: green;
+  }
 
-    .chart-area {display:grid; grid-template-columns:1fr; gap:15px;}
+  .save-btn:hover {
+    background: darkgreen;
+  }
 
-    .chart-box {
-      background:white;
-      padding:15px;
-      border-radius:12px;
-      box-shadow:0px 2px 8px rgba(0,0,0,0.1);
-      height:360px;
-    }
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    border-top: 1px solid #ddd;
+    padding: 10px 0;
+    z-index: 999;
+  }
 
-    .chart-box canvas {
-      max-height:280px !important;
-    }
+  .bottom-nav button {
+    background: none;
+    border: none;
+    font-size: 13px;
+    font-weight: bold;
+    color: #0d47a1;
+    padding: 6px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    width: auto;
+    margin: 0;
+  }
 
-    .table-area {
-      margin-top:20px;
-      background:white;
-      padding:15px;
-      border-radius:12px;
-      overflow-x:auto;
-      box-shadow:0px 2px 8px rgba(0,0,0,0.1);
-    }
+  .bottom-nav button.active {
+    background: #0d47a1;
+    color: white;
+  }
 
-    table {width:100%; border-collapse:collapse; font-size:13px;}
-    thead {background:#2563eb; color:white;}
-    th, td {padding:10px; border:1px solid #ddd; text-align:center;}
+  .hidden {
+    display: none;
+  }
 
-    footer {
-      text-align:center;
-      padding:12px;
-      background:#0f172a;
-      color:white;
-      margin-top:20px;
-    }
-
-    .smalltext {font-size:12px; opacity:0.8;}
-
-    .filter-box {
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-bottom:15px;
-    }
-
-    select, input {
-      padding:10px;
-      border-radius:8px;
-      border:1px solid #ccc;
-      font-size:14px;
-      flex:1;
-      min-width:180px;
-    }
-
-    .export-btn {
-      padding:10px;
-      border:none;
-      background:#16a34a;
-      color:white;
-      font-weight:bold;
-      border-radius:8px;
-      cursor:pointer;
-      flex:1;
-      min-width:180px;
-    }
-
-    .export-btn:hover {background:#15803d;}
-
-    .download-btn {
-      padding:6px 10px;
-      background:#16a34a;
-      color:white;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-      font-weight:bold;
-    }
-
-    .download-btn:hover {background:#15803d;}
-
-    /* LOGIN PAGE */
-    .login-box {
-      max-width:420px;
-      margin:40px auto;
-      background:white;
-      padding:25px;
-      border-radius:15px;
-      box-shadow:0px 2px 10px rgba(0,0,0,0.15);
-      text-align:center;
-    }
-
-    .login-box h2 {margin:0; color:#1e293b;}
-    .login-box p {font-size:13px; color:#555;}
-
-    .login-box input {
-      width:100%;
-      margin-top:12px;
-      padding:12px;
-      font-size:15px;
-      border-radius:10px;
-      border:1px solid #ccc;
-    }
-
-    .login-btn {
-      width:100%;
-      margin-top:15px;
-      padding:12px;
-      border:none;
-      background:#2563eb;
-      color:white;
-      font-size:15px;
-      border-radius:10px;
-      cursor:pointer;
-      font-weight:bold;
-    }
-
-    .login-btn:hover {background:#1d4ed8;}
-
-    .error-text {
-      color:red;
-      font-size:13px;
-      margin-top:10px;
-      font-weight:bold;
-    }
-
-    .success-text {
-      color:green;
-      font-size:13px;
-      margin-top:10px;
-      font-weight:bold;
-    }
-  </style>
+  .logout-btn {
+    background: crimson !important;
+    color: white !important;
+  }
+</style>
 </head>
 
 <body>
 
+<header id="headerTitle">DT Maintenance App</header>
+
 <!-- LOGIN SCREEN -->
-<div id="loginScreen" class="login-box">
-  <h2>🔐 Field Maintenance Portal</h2>
-  <p>Please login to continue</p>
+<div id="loginScreen" class="container">
+  <div class="login-box">
+    <h2>🔐 Login</h2>
+    <p style="text-align:center;color:#444;">Enter your username & password</p>
 
-  <input type="text" id="loginUsername" placeholder="Enter Username"/>
-  <input type="password" id="loginPassword" placeholder="Enter Password"/>
+    <input type="text" id="username" placeholder="Username">
 
-  <button class="login-btn" onclick="login()">Login</button>
+    <!-- PASSWORD WITH EYE ICON -->
+    <div class="password-wrapper">
+      <input type="password" id="password" placeholder="Password">
+      <span class="eye-btn" onclick="togglePassword()">👁</span>
+    </div>
 
-  <div id="loginMsg" class="error-text"></div>
+    <button onclick="login()">Login</button>
+
+    <p id="err" class="error"></p>
+
+    <p style="text-align:center;color:#777;margin-top:20px;font-size:13px;">
+      App developed by porag kumar das❤️
+    </p>
+  </div>
 </div>
 
 <!-- MAIN APP -->
-<div id="appScreen" style="display:none;">
+<div id="mainApp" class="container hidden">
 
-  <header>
-    <h2>📊 Field Maintenance Portal</h2>
-    <p id="welcomeText">Welcome</p>
-  </header>
-
-  <div class="container">
-
-    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
-
-    <!-- TAB BUTTONS -->
-    <div class="tabs" id="tabButtons"></div>
-
-    <!-- DASHBOARD TAB -->
-    <div id="dashboardTab" class="tab-content">
-
-      <button class="refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-      <div class="status" id="statusText">Loading data...</div>
-
-      <div class="kpi-grid">
-        <div class="kpi-card"><h3>Total MI</h3><p id="kpi_total">0</p></div>
-        <div class="kpi-card"><h3>Comm</h3><p id="kpi_comm">0</p></div>
-        <div class="kpi-card"><h3>Non Comm</h3><p id="kpi_noncomm">0</p></div>
-        <div class="kpi-card"><h3>Never Comm</h3><p id="kpi_nevercomm">0</p></div>
-        <div class="kpi-card"><h3>Pending %</h3><p id="kpi_pending_pct">0%</p></div>
-        <div class="kpi-card"><h3>Comm %</h3><p id="kpi_comm_pct">0%</p></div>
-      </div>
-
-      <div class="chart-area">
-        <div class="chart-box">
-          <h3>Communication Status Breakdown</h3>
-          <canvas id="statusChart"></canvas>
-        </div>
-
-        <div class="chart-box">
-          <h3>Top 15 Sub Division Wise Pending</h3>
-          <p class="smalltext">Pending = Non Comm + Never Comm</p>
-          <canvas id="subdivisionChart"></canvas>
-        </div>
-      </div>
-
-      <div class="table-area">
-        <h3>📋 Executive + Sub Division Pending Summary</h3>
-        <p class="smalltext">Pending = Non Comm + Never Comm</p>
-
-        <table id="summaryTable">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
+  <!-- DASHBOARD TAB -->
+  <div id="tabDashboard" class="tab active">
+    <div class="sheet-crop-box">
+      <iframe id="dashboardFrame"></iframe>
     </div>
-
-    <!-- MASTER SHEET TAB -->
-    <div id="sheetTab" class="tab-content">
-
-      <h3>📑 Master Sheet View</h3>
-      <p class="smalltext">Filter by Sub Division + Export filtered data</p>
-
-      <div class="filter-box">
-        <select id="subdivisionFilter" onchange="renderFullTable()">
-          <option value="">All Sub Divisions</option>
-        </select>
-
-        <input type="text" id="searchBox" placeholder="Search anything..." onkeyup="renderFullTable()"/>
-
-        <button class="export-btn" onclick="exportFilteredCSV()">⬇ Export Filtered Excel</button>
-      </div>
-
-      <div class="table-area">
-        <table id="fullDataTable">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
-        <p class="smalltext">Showing max 200 rows for performance.</p>
-      </div>
-
-    </div>
-
-    <!-- FORM TAB -->
-    <div id="formTab" class="tab-content">
-      <h3>📝 Submit Field Report</h3>
-      <p class="smalltext">
-        Click the button below to open the form and submit your work update.
-      </p>
-
-      <button class="refresh-btn" onclick="openSubmitForm()">
-        📝 Open Submit Form
-      </button>
-
-      <div class="table-area">
-        <h3>Form Link</h3>
-        <p class="smalltext">
-          https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform
-        </p>
-      </div>
-    </div>
-
-    <!-- ACCESS MANAGEMENT TAB (ADMIN ONLY) -->
-    <div id="accessTab" class="tab-content">
-      <h3>🔐 Access Management</h3>
-      <p class="smalltext">Admin can add or remove users here.</p>
-
-      <div class="table-area">
-        <h3>Add New User</h3>
-
-        <input type="text" id="newUsername" placeholder="Enter Username"/>
-        <input type="password" id="newPassword" placeholder="Enter Password"/>
-
-        <select id="newRole">
-          <option value="EXECUTIVE">EXECUTIVE</option>
-          <option value="TECHNICIAN">TECHNICIAN</option>
-          <option value="ADMIN">ADMIN</option>
-        </select>
-
-        <button class="export-btn" onclick="addUser()">➕ Add User</button>
-
-        <div id="accessMsg" class="success-text"></div>
-      </div>
-
-      <div class="table-area">
-        <h3>Existing Users</h3>
-
-        <table id="usersTable">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
   </div>
 
-  <footer>
-    <p>Developed by Porag Kumar Das ❤️</p>
-  </footer>
+  <!-- DOWNLOADS TAB -->
+  <div id="tabDownloads" class="tab">
+    <div class="sheet-crop-box">
+      <iframe id="downloadsFrame"></iframe>
+    </div>
+  </div>
+
+  <!-- FORM TAB -->
+  <div id="tabForm" class="tab">
+    <div class="form-box">
+      <iframe id="formFrame"></iframe>
+    </div>
+  </div>
+
+  <!-- ADMIN TAB -->
+  <div id="tabAdmin" class="tab">
+    <div class="admin-panel">
+
+      <div class="admin-card">
+        <h3>Admin Settings</h3>
+        <p>Update links here. Saved in browser.</p>
+
+        <label><b>Dashboard Sheet Link</b></label>
+        <input type="text" id="dashLinkInput" placeholder="Paste dashboard published link">
+
+        <label><b>Downloads Sheet Link</b></label>
+        <input type="text" id="downloadLinkInput" placeholder="Paste downloads published link">
+
+        <label><b>Google Form Embed Link</b></label>
+        <input type="text" id="formLinkInput" placeholder="Paste google form embed link">
+
+        <button class="save-btn" onclick="saveAdminLinks()">Save Links</button>
+      </div>
+
+      <div class="admin-card">
+        <h3>Note</h3>
+        <p>
+          Admin changes apply only on this device unless you host backend.
+          For global config, we can store links in Google Sheet also.
+        </p>
+      </div>
+
+    </div>
+  </div>
 
 </div>
 
+<!-- BOTTOM NAV -->
+<div id="bottomNav" class="bottom-nav hidden">
+  <button id="btnDashboard" class="active" onclick="showTab('dashboard')">Dashboard</button>
+  <button id="btnDownloads" onclick="showTab('downloads')">Downloads</button>
+  <button id="btnForm" onclick="showTab('form')">Form</button>
+  <button id="btnAdmin" class="hidden" onclick="showTab('admin')">Admin</button>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
 <script>
+  // ==============================
+  // PASSWORD EYE TOGGLE
+  // ==============================
+  function togglePassword() {
+    let passField = document.getElementById("password");
+
+    if (passField.type === "password") {
+      passField.type = "text";
+    } else {
+      passField.type = "password";
+    }
+  }
+
+  // ==============================
+  // FIXED ADMIN LOGIN
+  // ==============================
   const ADMIN_USERNAME = "porag.das";
   const ADMIN_PASSWORD = "gknayakg07";
 
-  let currentUser = null;
-  let currentRole = null;
+  // ==============================
+  // USERS SHEET CSV (Executive/Technician)
+  // ==============================
+  const USERS_SHEET_CSV =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSQEYtdLJy6g0hojsLh-dPPMc8UFOFFw7aOSM7YUcoO7i6eq_ZCbXSuCGD4A8D_hzh2jb4OuxAGdzaQ/pub?output=csv&gid=0";
 
-  let statusChart, subdivisionChart;
+  // ==============================
+  // DEFAULT LINKS
+  // ==============================
+  const DEFAULT_DASHBOARD_LINK =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pubhtml?gid=0&single=true";
 
-  let masterData = [];
-  let rawHeaders = [];
+  const DEFAULT_DOWNLOADS_LINK =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pubhtml?gid=405039605&single=true";
 
-  const DATA_URL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pub?gid=405039605&single=true&output=csv";
+  const DEFAULT_FORM_LINK =
+    "https://docs.google.com/forms/d/e/FORM_ID/viewform?embedded=true";
 
-  function openSubmitForm() {
-    window.open(
-      "https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform",
-      "_blank"
-    );
-  }
+  let usersData = [];
 
-  function getUsers() {
-    let users = localStorage.getItem("users_list");
-    if (!users) return [];
-    return JSON.parse(users);
-  }
+  // Load saved links
+  let dashboardLink = localStorage.getItem("dashboardLink") || DEFAULT_DASHBOARD_LINK;
+  let downloadsLink = localStorage.getItem("downloadsLink") || DEFAULT_DOWNLOADS_LINK;
+  let formLink = localStorage.getItem("formLink") || DEFAULT_FORM_LINK;
 
-  function saveUsers(users) {
-    localStorage.setItem("users_list", JSON.stringify(users));
-  }
+  // Fetch users list
+  fetch(USERS_SHEET_CSV)
+    .then(res => res.text())
+    .then(text => {
+      usersData = parseCSV(text);
+    })
+    .catch(err => {
+      console.error("Could not load users sheet:", err);
+    });
 
+  // ==============================
+  // LOGIN FUNCTION
+  // ==============================
   function login() {
-    let username = document.getElementById("loginUsername").value.trim();
-    let password = document.getElementById("loginPassword").value.trim();
-    let msgBox = document.getElementById("loginMsg");
+    let user = document.getElementById("username").value.trim();
+    let pass = document.getElementById("password").value.trim();
+    let err = document.getElementById("err");
 
-    msgBox.innerText = "";
+    err.innerText = "";
 
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      currentUser = username;
-      currentRole = "ADMIN";
-      localStorage.setItem("logged_user", username);
-      localStorage.setItem("logged_role", currentRole);
-      showApp();
+    if (!user || !pass) {
+      err.innerText = "Enter username and password";
       return;
     }
 
-    let users = getUsers();
-    let found = users.find(u => u.username === username && u.password === password);
-
-    if (!found) {
-      msgBox.innerText = "❌ Access Denied (Invalid Username or Password)";
+    // ADMIN FIXED LOGIN
+    if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
+      localStorage.setItem("loggedInUser", user);
+      localStorage.setItem("loggedInRole", "admin");
+      startApp();
       return;
     }
 
-    currentUser = found.username;
-    currentRole = found.role;
+    // Executive / Technician from Google Sheet
+    if (!usersData || usersData.length === 0) {
+      err.innerText = "User list not loaded yet. Try again in 2 seconds.";
+      return;
+    }
 
-    localStorage.setItem("logged_user", currentUser);
-    localStorage.setItem("logged_role", currentRole);
+    let foundRole = null;
 
-    showApp();
+    for (let i = 1; i < usersData.length; i++) {
+      let row = usersData[i];
+
+      let sheetUser = (row[0] || "").trim();
+      let sheetPass = (row[1] || "").trim();
+      let sheetRole = (row[2] || "").trim().toLowerCase();
+
+      if (sheetUser === user && sheetPass === pass) {
+        foundRole = sheetRole;
+        break;
+      }
+    }
+
+    if (!foundRole) {
+      err.innerText = "❌ Access Denied (Invalid Username or Password)";
+      return;
+    }
+
+    if (foundRole !== "executive" && foundRole !== "technician") {
+      err.innerText = "❌ Access Denied (Role not allowed)";
+      return;
+    }
+
+    localStorage.setItem("loggedInUser", user);
+    localStorage.setItem("loggedInRole", foundRole);
+
+    startApp();
   }
 
+  // ==============================
+  // START APP AFTER LOGIN
+  // ==============================
+  function startApp() {
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("mainApp").classList.remove("hidden");
+    document.getElementById("bottomNav").classList.remove("hidden");
+
+    let role = localStorage.getItem("loggedInRole");
+
+    document.getElementById("headerTitle").innerText =
+      "DT Maintenance App (" + role.toUpperCase() + ")";
+
+    // Set iframe links
+    document.getElementById("dashboardFrame").src = dashboardLink;
+    document.getElementById("downloadsFrame").src = downloadsLink;
+    document.getElementById("formFrame").src = formLink;
+
+    // Admin tab visible only for admin
+    if (role === "admin") {
+      document.getElementById("btnAdmin").classList.remove("hidden");
+      loadAdminInputs();
+    } else {
+      document.getElementById("btnAdmin").classList.add("hidden");
+    }
+  }
+
+  // ==============================
+  // SAVE ADMIN LINKS
+  // ==============================
+  function saveAdminLinks() {
+    dashboardLink = document.getElementById("dashLinkInput").value.trim();
+    downloadsLink = document.getElementById("downloadLinkInput").value.trim();
+    formLink = document.getElementById("formLinkInput").value.trim();
+
+    if (!dashboardLink || !downloadsLink || !formLink) {
+      alert("Please fill all links!");
+      return;
+    }
+
+    localStorage.setItem("dashboardLink", dashboardLink);
+    localStorage.setItem("downloadsLink", downloadsLink);
+    localStorage.setItem("formLink", formLink);
+
+    // Reload iframes
+    document.getElementById("dashboardFrame").src = dashboardLink;
+    document.getElementById("downloadsFrame").src = downloadsLink;
+    document.getElementById("formFrame").src = formLink;
+
+    alert("Links Updated Successfully!");
+  }
+
+  function loadAdminInputs() {
+    document.getElementById("dashLinkInput").value = dashboardLink;
+    document.getElementById("downloadLinkInput").value = downloadsLink;
+    document.getElementById("formLinkInput").value = formLink;
+  }
+
+  // ==============================
+  // LOGOUT
+  // ==============================
   function logout() {
-    localStorage.removeItem("logged_user");
-    localStorage.removeItem("logged_role");
-
-    document.getElementById("appScreen").style.display = "none";
-    document.getElementById("loginScreen").style.display = "block";
-
-    document.getElementById("loginUsername").value = "";
-    document.getElementById("loginPassword").value = "";
-    document.getElementById("loginMsg").innerText = "";
+    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("loggedInRole");
+    location.reload();
   }
 
-  function showApp() {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("appScreen").style.display = "block";
+  // ==============================
+  // TAB SWITCHING
+  // ==============================
+  function showTab(tab) {
+    document.getElementById("tabDashboard").classList.remove("active");
+    document.getElementById("tabDownloads").classList.remove("active");
+    document.getElementById("tabForm").classList.remove("active");
+    document.getElementById("tabAdmin").classList.remove("active");
 
-    document.getElementById("welcomeText").innerText =
-      "Welcome " + currentUser + " (" + currentRole + ")";
+    document.getElementById("btnDashboard").classList.remove("active");
+    document.getElementById("btnDownloads").classList.remove("active");
+    document.getElementById("btnForm").classList.remove("active");
+    document.getElementById("btnAdmin").classList.remove("active");
 
-    buildTabsByRole();
-    openTab("dashboardTab");
+    if (tab === "dashboard") {
+      document.getElementById("tabDashboard").classList.add("active");
+      document.getElementById("btnDashboard").classList.add("active");
+    }
 
-    loadData();
+    if (tab === "downloads") {
+      document.getElementById("tabDownloads").classList.add("active");
+      document.getElementById("btnDownloads").classList.add("active");
+    }
 
-    setInterval(() => {
-      loadData();
-    }, 300000);
+    if (tab === "form") {
+      document.getElementById("tabForm").classList.add("active");
+      document.getElementById("btnForm").classList.add("active");
+    }
 
-    if (currentRole === "ADMIN") {
-      renderUsersTable();
+    if (tab === "admin") {
+      document.getElementById("tabAdmin").classList.add("active");
+      document.getElementById("btnAdmin").classList.add("active");
     }
   }
 
-  function buildTabsByRole() {
-    let tabButtons = document.getElementById("tabButtons");
-    tabButtons.innerHTML = "";
-
-    let tabs = [
-      { id: "dashboardTab", name: "📊 Dashboard" },
-      { id: "sheetTab", name: "📑 Master Sheet" },
-      { id: "formTab", name: "📝 Submit Form" }
-    ];
-
-    if (currentRole === "ADMIN") {
-      tabs.push({ id: "accessTab", name: "🔐 Access" });
-    }
-
-    tabs.forEach(tab => {
-      let btn = document.createElement("button");
-      btn.className = "tab-btn";
-      btn.innerText = tab.name;
-      btn.onclick = () => openTab(tab.id);
-      tabButtons.appendChild(btn);
-    });
+  // ==============================
+  // AUTO LOGIN IF SESSION EXISTS
+  // ==============================
+  if (localStorage.getItem("loggedInUser")) {
+    startApp();
   }
 
-  function openTab(tabId) {
-    document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
-    document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
-
-    document.getElementById(tabId).classList.add("active");
-
-    let buttons = document.querySelectorAll(".tab-btn");
-    buttons.forEach(btn => {
-      if (btn.innerText.includes("Dashboard") && tabId === "dashboardTab") btn.classList.add("active");
-      if (btn.innerText.includes("Master") && tabId === "sheetTab") btn.classList.add("active");
-      if (btn.innerText.includes("Submit") && tabId === "formTab") btn.classList.add("active");
-      if (btn.innerText.includes("Access") && tabId === "accessTab") btn.classList.add("active");
-    });
+  // ==============================
+  // SIMPLE CSV PARSER
+  // ==============================
+  function parseCSV(text) {
+    let rows = text.trim().split("\n");
+    return rows.map(row => row.split(","));
   }
-
-  function cleanText(value) {
-    if (value === null || value === undefined) return "";
-    return String(value).trim();
-  }
-
-  function normalizeStatus(status) {
-    status = cleanText(status).toLowerCase();
-    if (status.includes("never")) return "Never Comm";
-    if (status.includes("non")) return "Non Comm";
-    if (status.includes("comm")) return "Comm";
-    return "Unknown";
-  }
-
-  function parseCSVLine(line) {
-    let result = [];
-    let current = "";
-    let inQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-      let char = line[i];
-
-      if (char === '"' && line[i + 1] === '"') {
-        current += '"';
-        i++;
-      } else if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === "," && !inQuotes) {
-        result.push(current);
-        current = "";
-      } else {
-        current += char;
-      }
-    }
-
-    result.push(current);
-    return result;
-  }
-
-  async function fetchCSVWithRetry(url, retries = 3) {
-    for (let i = 0; i < retries; i++) {
-      try {
-        let finalURL = url + "&nocache=" + new Date().getTime();
-        let response = await fetch(finalURL);
-
-        if (!response.ok) throw new Error("HTTP Error");
-
-        let text = await response.text();
-        if (text.length < 5000) throw new Error("Incomplete Data");
-
-        return text;
-      } catch (err) {
-        if (i === retries - 1) throw err;
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-    }
-  }
-
-  async function loadData() {
-    document.getElementById("statusText").innerText = "Loading data...";
-
-    try {
-      let csvText = await fetchCSVWithRetry(DATA_URL, 3);
-      let lines = csvText.split("\n").filter(line => line.trim() !== "");
-
-      rawHeaders = parseCSVLine(lines[0]);
-
-      masterData = [];
-      let dashboardData = [];
-
-      for (let i = 1; i < lines.length; i++) {
-        let cols = parseCSVLine(lines[i]);
-        masterData.push(cols);
-
-        let executive = cleanText(cols[0]);
-        let subdivision = cleanText(cols[3]);
-        let statusRaw = cleanText(cols[13]);
-
-        let miFlag = cleanText(cols[cols.length - 1]);
-        if (!miFlag.toLowerCase().includes("mi")) continue;
-
-        let status = normalizeStatus(statusRaw);
-
-        dashboardData.push({
-          Executive: executive || "Unknown",
-          "Sub Division": subdivision || "Unknown",
-          Status: status
-        });
-      }
-
-      updateDashboard(dashboardData);
-      populateSubDivisionDropdown();
-
-      document.getElementById("statusText").innerText =
-        "✅ Data Loaded Successfully (" + dashboardData.length + " Records)";
-
-      renderFullTable();
-
-    } catch (err) {
-      document.getElementById("statusText").innerText = "❌ Data Load Failed.";
-      alert("Data Load Failed. Please check internet or sheet publishing.");
-    }
-  }
-
-  function updateDashboard(data) {
-    let totalMI = data.length;
-    let commCount = data.filter(x => x.Status === "Comm").length;
-    let nonCommCount = data.filter(x => x.Status === "Non Comm").length;
-    let neverCommCount = data.filter(x => x.Status === "Never Comm").length;
-
-    let pendingCount = nonCommCount + neverCommCount;
-
-    let pendingPct = totalMI > 0 ? ((pendingCount / totalMI) * 100).toFixed(2) : 0;
-    let commPct = totalMI > 0 ? ((commCount / totalMI) * 100).toFixed(2) : 0;
-
-    document.getElementById("kpi_total").innerText = totalMI;
-    document.getElementById("kpi_comm").innerText = commCount;
-    document.getElementById("kpi_noncomm").innerText = nonCommCount;
-    document.getElementById("kpi_nevercomm").innerText = neverCommCount;
-    document.getElementById("kpi_pending_pct").innerText = pendingPct + "%";
-    document.getElementById("kpi_comm_pct").innerText = commPct + "%";
-
-    renderStatusChart(commCount, nonCommCount, neverCommCount);
-    renderSubDivisionChart(data);
-    renderSummaryTable(data);
-  }
-
-  function renderStatusChart(comm, nonComm, neverComm) {
-    let ctx = document.getElementById("statusChart").getContext("2d");
-    if (statusChart) statusChart.destroy();
-
-    statusChart = new Chart(ctx, {
-      type: "pie",
-      data: {
-        labels: ["Comm", "Non Comm", "Never Comm"],
-        datasets: [{
-          data: [comm, nonComm, neverComm],
-          backgroundColor: ["#22c55e", "#f97316", "#ef4444"]
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: "bottom" },
-          datalabels: {
-            color: "#fff",
-            font: { weight: "bold" },
-            formatter: function(value, ctx) {
-              let total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-              let pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-              return pct + "%";
-            }
-          }
-        }
-      },
-      plugins: [ChartDataLabels]
-    });
-  }
-
-  function renderSubDivisionChart(data) {
-    let subMap = {};
-
-    data.forEach(row => {
-      let sub = row["Sub Division"];
-      if (!subMap[sub]) subMap[sub] = { non: 0, never: 0 };
-
-      if (row.Status === "Non Comm") subMap[sub].non++;
-      if (row.Status === "Never Comm") subMap[sub].never++;
-    });
-
-    let labels = Object.keys(subMap);
-
-    labels.sort((a, b) => {
-      let totalA = subMap[a].non + subMap[a].never;
-      let totalB = subMap[b].non + subMap[b].never;
-      return totalB - totalA;
-    });
-
-    labels = labels.slice(0, 15);
-
-    let nonValues = labels.map(x => subMap[x].non);
-    let neverValues = labels.map(x => subMap[x].never);
-
-    let ctx = document.getElementById("subdivisionChart").getContext("2d");
-    if (subdivisionChart) subdivisionChart.destroy();
-
-    subdivisionChart = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: labels,
-        datasets: [
-          { label: "Non Comm", data: nonValues, backgroundColor: "#f97316" },
-          { label: "Never Comm", data: neverValues, backgroundColor: "#ef4444" }
-        ]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: "bottom" },
-          datalabels: {
-            anchor: "end",
-            align: "top",
-            color: "#111",
-            font: { weight: "bold", size: 10 }
-          }
-        },
-        scales: { y: { beginAtZero: true } }
-      },
-      plugins: [ChartDataLabels]
-    });
-  }
-
-  function safeFileName(text) {
-    return String(text).replace(/[^a-z0-9]/gi, "_");
-  }
-
-  function downloadExecutivePending(executiveName, subDivisionName) {
-    let filteredRows = [];
-    filteredRows.push(rawHeaders);
-
-    for (let i = 0; i < masterData.length; i++) {
-      let row = masterData[i];
-
-      let exec = cleanText(row[0]);
-      let sub = cleanText(row[3]);
-      let status = cleanText(row[13]).toLowerCase();
-
-      if (exec === executiveName && sub === subDivisionName) {
-        if (status.includes("non") || status.includes("never")) {
-          filteredRows.push(row);
-        }
-      }
-    }
-
-    if (filteredRows.length <= 1) {
-      alert("No pending data found for this row.");
-      return;
-    }
-
-    let csvContent = filteredRows.map(r =>
-      r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-    ).join("\n");
-
-    let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    let url = URL.createObjectURL(blob);
-
-    let a = document.createElement("a");
-    a.href = url;
-    a.download = safeFileName(executiveName + "_" + subDivisionName + "_Pending.csv");
-    a.click();
-
-    URL.revokeObjectURL(url);
-  }
-
-  function renderSummaryTable(data) {
-    let summaryMap = {};
-
-    data.forEach(row => {
-      if (row.Status !== "Non Comm" && row.Status !== "Never Comm") return;
-
-      let key = row.Executive + "||" + row["Sub Division"];
-
-      if (!summaryMap[key]) {
-        summaryMap[key] = { Executive: row.Executive, SubDivision: row["Sub Division"], non: 0, never: 0 };
-      }
-
-      if (row.Status === "Non Comm") summaryMap[key].non++;
-      if (row.Status === "Never Comm") summaryMap[key].never++;
-    });
-
-    let summaryArray = Object.values(summaryMap).map(x => ({
-      "Executive": x.Executive,
-      "Sub Division": x.SubDivision,
-      "Non Comm": x.non,
-      "Never Comm": x.never,
-      "Total Pending": x.non + x.never
-    }));
-
-    summaryArray.sort((a, b) => b["Total Pending"] - a["Total Pending"]);
-
-    let table = document.getElementById("summaryTable");
-    let thead = table.querySelector("thead");
-    let tbody = table.querySelector("tbody");
-
-    thead.innerHTML = "";
-    tbody.innerHTML = "";
-
-    thead.innerHTML = `
-      <tr>
-        <th>Executive</th>
-        <th>Sub Division</th>
-        <th>Non Comm</th>
-        <th>Never Comm</th>
-        <th>Total Pending</th>
-        <th>Download</th>
-      </tr>
-    `;
-
-    summaryArray.forEach(row => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${row["Executive"]}</td>
-          <td>${row["Sub Division"]}</td>
-          <td>${row["Non Comm"]}</td>
-          <td>${row["Never Comm"]}</td>
-          <td>${row["Total Pending"]}</td>
-          <td>
-            <button class="download-btn"
-              onclick="downloadExecutivePending('${row["Executive"]}','${row["Sub Division"]}')">
-              Download
-            </button>
-          </td>
-        </tr>
-      `;
-    });
-  }
-
-  function populateSubDivisionDropdown() {
-    let dropdown = document.getElementById("subdivisionFilter");
-    let existing = dropdown.value;
-
-    let subs = new Set();
-    for (let i = 0; i < masterData.length; i++) {
-      let sub = cleanText(masterData[i][3]);
-      if (sub) subs.add(sub);
-    }
-
-    let sortedSubs = Array.from(subs).sort();
-
-    dropdown.innerHTML = `<option value="">All Sub Divisions</option>`;
-    sortedSubs.forEach(s => {
-      dropdown.innerHTML += `<option value="${s}">${s}</option>`;
-    });
-
-    dropdown.value = existing;
-  }
-
-  function renderFullTable() {
-    let filterSub = document.getElementById("subdivisionFilter").value;
-    let search = document.getElementById("searchBox").value.toLowerCase();
-
-    let table = document.getElementById("fullDataTable");
-    let thead = table.querySelector("thead");
-    let tbody = table.querySelector("tbody");
-
-    thead.innerHTML = "";
-    tbody.innerHTML = "";
-
-    let headerRow = "<tr>";
-    rawHeaders.forEach(h => headerRow += `<th>${h}</th>`);
-    headerRow += "</tr>";
-    thead.innerHTML = headerRow;
-
-    let count = 0;
-
-    for (let i = 0; i < masterData.length; i++) {
-      let row = masterData[i];
-
-      let sub = cleanText(row[3]);
-      if (filterSub && sub !== filterSub) continue;
-
-      let rowText = row.join(" ").toLowerCase();
-      if (search && !rowText.includes(search)) continue;
-
-      count++;
-      if (count > 200) break;
-
-      let tr = "<tr>";
-      row.forEach(cell => tr += `<td>${cleanText(cell)}</td>`);
-      tr += "</tr>";
-
-      tbody.innerHTML += tr;
-    }
-  }
-
-  function exportFilteredCSV() {
-    let filterSub = document.getElementById("subdivisionFilter").value;
-    let search = document.getElementById("searchBox").value.toLowerCase();
-
-    let exportRows = [];
-    exportRows.push(rawHeaders);
-
-    for (let i = 0; i < masterData.length; i++) {
-      let row = masterData[i];
-
-      let sub = cleanText(row[3]);
-      if (filterSub && sub !== filterSub) continue;
-
-      let rowText = row.join(" ").toLowerCase();
-      if (search && !rowText.includes(search)) continue;
-
-      exportRows.push(row);
-    }
-
-    if (exportRows.length <= 1) {
-      alert("No data found for export.");
-      return;
-    }
-
-    let csvContent = exportRows.map(r =>
-      r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-    ).join("\n");
-
-    let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    let url = URL.createObjectURL(blob);
-
-    let a = document.createElement("a");
-    a.href = url;
-
-    let filename = "Filtered_Data.csv";
-    if (filterSub) filename = safeFileName(filterSub) + "_Filtered.csv";
-
-    a.download = filename;
-    a.click();
-
-    URL.revokeObjectURL(url);
-  }
-
-  function addUser() {
-    let username = document.getElementById("newUsername").value.trim();
-    let password = document.getElementById("newPassword").value.trim();
-    let role = document.getElementById("newRole").value;
-
-    let msg = document.getElementById("accessMsg");
-    msg.innerText = "";
-
-    if (!username || !password) {
-      alert("Enter username and password.");
-      return;
-    }
-
-    let users = getUsers();
-
-    if (users.find(u => u.username === username)) {
-      alert("User already exists!");
-      return;
-    }
-
-    users.push({ username, password, role });
-    saveUsers(users);
-
-    document.getElementById("newUsername").value = "";
-    document.getElementById("newPassword").value = "";
-
-    msg.innerText = "✅ User Added Successfully!";
-    renderUsersTable();
-  }
-
-  function deleteUser(username) {
-    let users = getUsers();
-    users = users.filter(u => u.username !== username);
-    saveUsers(users);
-    renderUsersTable();
-  }
-
-  function renderUsersTable() {
-    let table = document.getElementById("usersTable");
-    let thead = table.querySelector("thead");
-    let tbody = table.querySelector("tbody");
-
-    thead.innerHTML = `
-      <tr>
-        <th>Username</th>
-        <th>Password</th>
-        <th>Role</th>
-        <th>Delete</th>
-      </tr>
-    `;
-
-    tbody.innerHTML = "";
-
-    let users = getUsers();
-
-    users.forEach(u => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${u.username}</td>
-          <td>${u.password}</td>
-          <td>${u.role}</td>
-          <td>
-            <button class="download-btn" style="background:#ef4444;"
-              onclick="deleteUser('${u.username}')">
-              Delete
-            </button>
-          </td>
-        </tr>
-      `;
-    });
-  }
-
-  // AUTO LOGIN IF ALREADY LOGGED
-  window.onload = function() {
-    let savedUser = localStorage.getItem("logged_user");
-    let savedRole = localStorage.getItem("logged_role");
-
-    if (savedUser && savedRole) {
-      currentUser = savedUser;
-      currentRole = savedRole;
-      showApp();
-    }
-  };
 </script>
 
 </body>
