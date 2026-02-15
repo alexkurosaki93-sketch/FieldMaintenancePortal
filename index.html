@@ -1,83 +1,247 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Field Maintenance Portal</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Field Maintenance Portal</title>
 
-<style>
-body { font-family: Arial; background:#f4f6f9; margin:0; }
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
-.login-box {
-  max-width:400px;
-  margin:60px auto;
-  background:white;
-  padding:25px;
-  border-radius:12px;
-  box-shadow:0 2px 10px rgba(0,0,0,0.15);
-  text-align:center;
-}
+  <style>
+    body {font-family: Arial, sans-serif; margin:0; background:#f4f6f9; color:#222;}
 
-input, select {
-  width:100%;
-  padding:12px;
-  margin-top:12px;
-  border-radius:8px;
-  border:1px solid #ccc;
-  font-size:14px;
-}
+    header {
+      text-align:center;
+      padding:15px;
+      background:#1e293b;
+      color:white;
+    }
 
-button {
-  width:100%;
-  padding:12px;
-  margin-top:15px;
-  border:none;
-  border-radius:8px;
-  background:#2563eb;
-  color:white;
-  font-weight:bold;
-  cursor:pointer;
-}
+    header h2 {margin:5px; font-size:22px;}
+    header p {margin:0; font-size:14px; opacity:0.9;}
 
-button:hover { background:#1d4ed8; }
+    .container {padding:15px;}
 
-.tabs {
-  display:flex;
-  gap:10px;
-  padding:10px;
-  background:#111827;
-}
+    .tabs {display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;}
+    .tab-btn {
+      flex:1;
+      padding:12px;
+      border:none;
+      background:#e2e8f0;
+      color:#111;
+      font-size:15px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:bold;
+      min-width:120px;
+    }
+    .tab-btn.active {background:#2563eb; color:white;}
 
-.tab-btn {
-  flex:1;
-  padding:10px;
-  border:none;
-  background:#374151;
-  color:white;
-  border-radius:8px;
-  cursor:pointer;
-}
+    .tab-content {display:none;}
+    .tab-content.active {display:block;}
 
-.tab-btn.active { background:#2563eb; }
+    .refresh-btn {
+      width:100%;
+      padding:12px;
+      border:none;
+      background:#2563eb;
+      color:white;
+      font-size:15px;
+      border-radius:10px;
+      cursor:pointer;
+      margin-bottom:15px;
+      font-weight:bold;
+    }
+    .refresh-btn:hover {background:#1d4ed8;}
 
-.tab-content { display:none; padding:15px; }
-.tab-content.active { display:block; }
+    .logout-btn {
+      width:100%;
+      padding:12px;
+      border:none;
+      background:#ef4444;
+      color:white;
+      font-size:15px;
+      border-radius:10px;
+      cursor:pointer;
+      margin-bottom:15px;
+      font-weight:bold;
+    }
+    .logout-btn:hover {background:#dc2626;}
 
-iframe {
-  width:100%;
-  height:800px;
-  border:none;
-  border-radius:10px;
-}
+    .status {text-align:center; font-size:13px; margin-bottom:10px; font-weight:bold;}
 
-.table-box {
-  background:white;
-  padding:15px;
-  border-radius:10px;
-  margin-top:20px;
-}
+    .kpi-grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap:12px;
+      margin-bottom:15px;
+    }
 
-</style>
+    .kpi-card {
+      background:white;
+      padding:15px;
+      border-radius:12px;
+      text-align:center;
+      box-shadow:0px 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .kpi-card h3 {font-size:14px; margin:0; color:#555;}
+    .kpi-card p {font-size:22px; margin:8px 0 0; font-weight:bold; color:#2563eb;}
+
+    .chart-area {display:grid; grid-template-columns:1fr; gap:15px;}
+
+    .chart-box {
+      background:white;
+      padding:15px;
+      border-radius:12px;
+      box-shadow:0px 2px 8px rgba(0,0,0,0.1);
+      height:360px;
+    }
+
+    .chart-box canvas {
+      max-height:280px !important;
+    }
+
+    .table-area {
+      margin-top:20px;
+      background:white;
+      padding:15px;
+      border-radius:12px;
+      overflow-x:auto;
+      box-shadow:0px 2px 8px rgba(0,0,0,0.1);
+    }
+
+    table {width:100%; border-collapse:collapse; font-size:13px;}
+    thead {background:#2563eb; color:white;}
+    th, td {padding:10px; border:1px solid #ddd; text-align:center;}
+
+    footer {
+      text-align:center;
+      padding:12px;
+      background:#0f172a;
+      color:white;
+      margin-top:20px;
+    }
+
+    .smalltext {font-size:12px; opacity:0.8;}
+
+    .filter-box {
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:15px;
+    }
+
+    select, input {
+      padding:10px;
+      border-radius:8px;
+      border:1px solid #ccc;
+      font-size:14px;
+      flex:1;
+      min-width:180px;
+    }
+
+    .export-btn {
+      padding:10px;
+      border:none;
+      background:#16a34a;
+      color:white;
+      font-weight:bold;
+      border-radius:8px;
+      cursor:pointer;
+      flex:1;
+      min-width:180px;
+    }
+
+    .export-btn:hover {background:#15803d;}
+
+    .download-btn {
+      padding:6px 10px;
+      background:#16a34a;
+      color:white;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+
+    .download-btn:hover {background:#15803d;}
+
+    /* LOGIN PAGE */
+    .login-box {
+      max-width:420px;
+      margin:40px auto;
+      background:white;
+      padding:25px;
+      border-radius:15px;
+      box-shadow:0px 2px 10px rgba(0,0,0,0.15);
+      text-align:center;
+    }
+
+    .login-box h2 {margin:0; color:#1e293b;}
+    .login-box p {font-size:13px; color:#555;}
+
+    .login-box input {
+      width:100%;
+      margin-top:12px;
+      padding:12px;
+      font-size:15px;
+      border-radius:10px;
+      border:1px solid #ccc;
+    }
+
+    .login-btn {
+      width:100%;
+      margin-top:15px;
+      padding:12px;
+      border:none;
+      background:#2563eb;
+      color:white;
+      font-size:15px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:bold;
+    }
+
+    .login-btn:hover {background:#1d4ed8;}
+
+    .error-text {
+      color:red;
+      font-size:13px;
+      margin-top:10px;
+      font-weight:bold;
+    }
+
+    .success-text {
+      color:green;
+      font-size:13px;
+      margin-top:10px;
+      font-weight:bold;
+    }
+
+    .password-box {
+      position:relative;
+      width:100%;
+      margin-top:12px;
+    }
+
+    .password-box input {
+      width:100%;
+      padding-right:50px;
+      margin-top:0px;
+    }
+
+    .eye-btn {
+      position:absolute;
+      right:15px;
+      top:50%;
+      transform:translateY(-50%);
+      cursor:pointer;
+      font-size:18px;
+      user-select:none;
+    }
+  </style>
 </head>
 
 <body>
@@ -85,196 +249,840 @@ iframe {
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" class="login-box">
   <h2>🔐 Field Maintenance Portal</h2>
+  <p>Please login to continue</p>
 
-  <input type="text" id="loginUsername" placeholder="Username">
+  <input type="text" id="loginUsername" placeholder="Enter Username"/>
 
-  <div style="position:relative;">
-    <input type="password" id="loginPassword" placeholder="Password" style="padding-right:40px;">
-    <span onclick="togglePassword()" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer;">👁️</span>
+  <div class="password-box">
+    <input type="password" id="loginPassword" placeholder="Enter Password"/>
+    <span class="eye-btn" onclick="togglePassword()">👁️</span>
   </div>
 
-  <button onclick="login()">Login</button>
-  <div id="loginMsg" style="color:red; margin-top:10px;"></div>
+  <button class="login-btn" onclick="login()">Login</button>
+
+  <div id="loginMsg" class="error-text"></div>
 </div>
 
 <!-- MAIN APP -->
 <div id="appScreen" style="display:none;">
 
-<div class="tabs" id="tabButtons"></div>
+  <header>
+    <h2>📊 Field Maintenance Portal</h2>
+    <p id="welcomeText">Welcome</p>
+  </header>
 
-<div id="dashboardTab" class="tab-content">
-  <h3>📊 Dashboard</h3>
-  <p>Dashboard Content Here</p>
-</div>
+  <div class="container">
 
-<div id="sheetTab" class="tab-content">
-  <h3>📑 Master Sheet</h3>
-  <p>Master Sheet Content Here</p>
-</div>
+    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
 
-<div id="formTab" class="tab-content">
-  <h3>📝 Submit Form</h3>
-  <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform?embedded=true"></iframe>
-</div>
+    <!-- TAB BUTTONS -->
+    <div class="tabs" id="tabButtons"></div>
 
-<div id="accessTab" class="tab-content">
-  <h3>🔐 Access Management</h3>
+    <!-- DASHBOARD TAB -->
+    <div id="dashboardTab" class="tab-content">
 
-  <div class="table-box">
-    <h4>Add New User</h4>
-    <input type="text" id="newUsername" placeholder="Username">
-    <input type="password" id="newPassword" placeholder="Password">
-    <select id="newRole">
-      <option value="EXECUTIVE">EXECUTIVE</option>
-      <option value="TECHNICIAN">TECHNICIAN</option>
-      <option value="ADMIN">ADMIN</option>
-    </select>
-    <button onclick="addUser()">➕ Add User</button>
+      <button class="refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
+      <div class="status" id="statusText">Loading data...</div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card"><h3>Total MI</h3><p id="kpi_total">0</p></div>
+        <div class="kpi-card"><h3>Comm</h3><p id="kpi_comm">0</p></div>
+        <div class="kpi-card"><h3>Non Comm</h3><p id="kpi_noncomm">0</p></div>
+        <div class="kpi-card"><h3>Never Comm</h3><p id="kpi_nevercomm">0</p></div>
+        <div class="kpi-card"><h3>Pending %</h3><p id="kpi_pending_pct">0%</p></div>
+        <div class="kpi-card"><h3>Comm %</h3><p id="kpi_comm_pct">0%</p></div>
+      </div>
+
+      <div class="chart-area">
+        <div class="chart-box">
+          <h3>Communication Status Breakdown</h3>
+          <canvas id="statusChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <h3>Top 15 Sub Division Wise Pending</h3>
+          <p class="smalltext">Pending = Non Comm + Never Comm</p>
+          <canvas id="subdivisionChart"></canvas>
+        </div>
+      </div>
+
+      <div class="table-area">
+        <h3>📋 Executive + Sub Division Pending Summary</h3>
+        <p class="smalltext">Pending = Non Comm + Never Comm</p>
+
+        <table id="summaryTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- MASTER SHEET TAB -->
+    <div id="sheetTab" class="tab-content">
+
+      <h3>📑 Master Sheet View</h3>
+      <p class="smalltext">Filter by Sub Division + Export filtered data</p>
+
+      <div class="filter-box">
+        <select id="subdivisionFilter" onchange="renderFullTable()">
+          <option value="">All Sub Divisions</option>
+        </select>
+
+        <input type="text" id="searchBox" placeholder="Search anything..." onkeyup="renderFullTable()"/>
+
+        <button class="export-btn" onclick="exportFilteredCSV()">⬇ Export Filtered Excel</button>
+      </div>
+
+      <div class="table-area">
+        <table id="fullDataTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+        <p class="smalltext">Showing max 200 rows for performance.</p>
+      </div>
+
+    </div>
+
+    <!-- FORM TAB -->
+    <div id="formTab" class="tab-content">
+      <h3>📝 Submit Field Report</h3>
+      <p class="smalltext">
+        Click the button below to open the form and submit your work update.
+      </p>
+
+      <button class="refresh-btn" onclick="openSubmitForm()">
+        📝 Open Submit Form
+      </button>
+
+      <div class="table-area">
+        <h3>Form Link</h3>
+        <p class="smalltext">
+          https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform
+        </p>
+      </div>
+    </div>
+
+    <!-- ACCESS MANAGEMENT TAB (ADMIN ONLY) -->
+    <div id="accessTab" class="tab-content">
+      <h3>🔐 Access Management</h3>
+      <p class="smalltext">Admin can add users here. It will save directly into Google Sheet.</p>
+
+      <div class="table-area">
+        <h3>Add New User</h3>
+
+        <input type="text" id="newUsername" placeholder="Enter Username"/>
+        <input type="password" id="newPassword" placeholder="Enter Password"/>
+
+        <select id="newRole">
+          <option value="EXECUTIVE">EXECUTIVE</option>
+          <option value="TECHNICIAN">TECHNICIAN</option>
+          <option value="ADMIN">ADMIN</option>
+        </select>
+
+        <button class="export-btn" onclick="addUser()">➕ Add User</button>
+
+        <div id="accessMsg" class="success-text"></div>
+      </div>
+
+      <div class="table-area">
+        <h3>Existing Users (From Sheet)</h3>
+
+        <table id="usersTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 
-</div>
+  <footer>
+    <p>Developed by Porag Kumar Das ❤️</p>
+  </footer>
 
 </div>
-
-<iframe name="hidden_iframe" style="display:none;"></iframe>
 
 <script>
+  const ADMIN_USERNAME = "porag.das";
+  const ADMIN_PASSWORD = "gknayakg07";
 
-const ADMIN_USERNAME = "porag.das";
-const ADMIN_PASSWORD = "gknayakg07";
+  const GOOGLE_FORM_URL =
+    "https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform";
 
-const ACCESS_SHEET_URL =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vSQEYtdLJy6g0hojsLh-dPPMc8UFOFFw7aOSM7YUcoO7i6eq_ZCbXSuCGD4A8D_hzh2jb4OuxAGdzaQ/pub?gid=0&single=true&output=csv";
+  // MASTER DATA SHEET CSV
+  const DATA_URL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pub?gid=405039605&single=true&output=csv";
 
-const ADD_USER_SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbzko5XYC3R4qkNVxRRGYZ0MrOHasS2nI5T5qpSMQhh6BtL9srGzYa9nIAfbK7o--0SD/exec";
+  // ACCESS SHEET CSV
+  const ACCESS_SHEET_URL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSQEYtdLJy6g0hojsLh-dPPMc8UFOFFw7aOSM7YUcoO7i6eq_ZCbXSuCGD4A8D_hzh2jb4OuxAGdzaQ/pub?gid=0&single=true&output=csv";
 
-let currentUser = null;
-let currentRole = null;
+  // APPS SCRIPT URL (WRITE USER)
+  const ADD_USER_SCRIPT_URL =
+    "https://script.google.com/macros/s/AKfycbzko5XYC3R4qkNVxRRGYZ0MrOHasS2nI5T5qpSMQhh6BtL9srGzYa9nIAfbK7o--0SD/exec";
 
-function togglePassword() {
-  let p = document.getElementById("loginPassword");
-  p.type = p.type === "password" ? "text" : "password";
-}
+  let currentUser = null;
+  let currentRole = null;
 
-async function login() {
+  let statusChart, subdivisionChart;
 
-  let username = document.getElementById("loginUsername").value.trim();
-  let password = document.getElementById("loginPassword").value.trim();
-  let msg = document.getElementById("loginMsg");
+  let masterData = [];
+  let rawHeaders = [];
 
-  msg.innerText = "";
-
-  if (!username || !password) {
-    msg.innerText = "Enter Username and Password";
-    return;
+  function togglePassword() {
+    let pass = document.getElementById("loginPassword");
+    pass.type = pass.type === "password" ? "text" : "password";
   }
 
-  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-    currentUser = username;
-    currentRole = "ADMIN";
-    showApp();
-    return;
+  function openSubmitForm() {
+    window.open(GOOGLE_FORM_URL, "_blank");
   }
 
-  try {
-    let res = await fetch(ACCESS_SHEET_URL + "&nocache=" + new Date().getTime());
-    let text = await res.text();
-    let lines = text.split("\n").filter(x => x.trim() !== "");
+  function logout() {
+    localStorage.removeItem("logged_user");
+    localStorage.removeItem("logged_role");
 
-    let found = false;
+    document.getElementById("appScreen").style.display = "none";
+    document.getElementById("loginScreen").style.display = "block";
 
-    for (let i = 1; i < lines.length; i++) {
-      let cols = lines[i].split(",");
-      if (cols[0]?.trim() === username && cols[1]?.trim() === password) {
-        currentUser = username;
-        currentRole = cols[2]?.trim().toUpperCase();
-        found = true;
-        break;
+    document.getElementById("loginUsername").value = "";
+    document.getElementById("loginPassword").value = "";
+    document.getElementById("loginMsg").innerText = "";
+  }
+
+  function showApp() {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("appScreen").style.display = "block";
+
+    document.getElementById("welcomeText").innerText =
+      "Welcome " + currentUser + " (" + currentRole + ")";
+
+    buildTabsByRole();
+    openTab("dashboardTab");
+
+    loadData();
+
+    setInterval(() => {
+      loadData();
+    }, 300000);
+
+    if (currentRole === "ADMIN") {
+      renderUsersTable();
+    }
+  }
+
+  function buildTabsByRole() {
+    let tabButtons = document.getElementById("tabButtons");
+    tabButtons.innerHTML = "";
+
+    let tabs = [
+      { id: "dashboardTab", name: "📊 Dashboard" },
+      { id: "sheetTab", name: "📑 Master Sheet" },
+      { id: "formTab", name: "📝 Submit Form" }
+    ];
+
+    if (currentRole === "ADMIN") {
+      tabs.push({ id: "accessTab", name: "🔐 Access" });
+    }
+
+    tabs.forEach(tab => {
+      let btn = document.createElement("button");
+      btn.className = "tab-btn";
+      btn.innerText = tab.name;
+      btn.onclick = () => openTab(tab.id);
+      tabButtons.appendChild(btn);
+    });
+  }
+
+  function openTab(tabId) {
+    document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+
+    document.getElementById(tabId).classList.add("active");
+
+    let buttons = document.querySelectorAll(".tab-btn");
+    buttons.forEach(btn => {
+      if (btn.innerText.includes("Dashboard") && tabId === "dashboardTab") btn.classList.add("active");
+      if (btn.innerText.includes("Master") && tabId === "sheetTab") btn.classList.add("active");
+      if (btn.innerText.includes("Submit") && tabId === "formTab") btn.classList.add("active");
+      if (btn.innerText.includes("Access") && tabId === "accessTab") btn.classList.add("active");
+    });
+  }
+
+  function cleanText(value) {
+    if (value === null || value === undefined) return "";
+    return String(value).trim();
+  }
+
+  function normalizeStatus(status) {
+    status = cleanText(status).toLowerCase();
+    if (status.includes("never")) return "Never Comm";
+    if (status.includes("non")) return "Non Comm";
+    if (status.includes("comm")) return "Comm";
+    return "Unknown";
+  }
+
+  function parseCSVLine(line) {
+    let result = [];
+    let current = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      let char = line[i];
+
+      if (char === '"' && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === "," && !inQuotes) {
+        result.push(current);
+        current = "";
+      } else {
+        current += char;
       }
     }
 
-    if (!found) {
-      msg.innerText = "Invalid Username or Password";
+    result.push(current);
+    return result;
+  }
+
+  async function fetchCSVWithRetry(url, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        let finalURL = url + "&nocache=" + new Date().getTime();
+        let response = await fetch(finalURL);
+
+        if (!response.ok) throw new Error("HTTP Error");
+
+        let text = await response.text();
+        if (text.length < 1000) throw new Error("Incomplete Data");
+
+        return text;
+      } catch (err) {
+        if (i === retries - 1) throw err;
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+  }
+
+  async function login() {
+    let username = document.getElementById("loginUsername").value.trim();
+    let password = document.getElementById("loginPassword").value.trim();
+    let msgBox = document.getElementById("loginMsg");
+
+    msgBox.innerText = "";
+
+    if (!username || !password) {
+      msgBox.innerText = "❌ Enter Username and Password";
       return;
     }
 
-    showApp();
+    // FIXED ADMIN LOGIN
+    if (
+      username.toLowerCase() === ADMIN_USERNAME.toLowerCase() &&
+      password === ADMIN_PASSWORD
+    ) {
+      currentUser = username;
+      currentRole = "ADMIN";
 
-  } catch (err) {
-    alert("Unable to load user access list. Check publishing.");
+      localStorage.setItem("logged_user", currentUser);
+      localStorage.setItem("logged_role", currentRole);
+
+      showApp();
+      return;
+    }
+
+    try {
+      msgBox.innerText = "🔍 Checking access...";
+
+      let csvText = await fetchCSVWithRetry(ACCESS_SHEET_URL, 3);
+      let lines = csvText.split("\n").filter(l => l.trim() !== "");
+
+      let found = null;
+
+      for (let i = 1; i < lines.length; i++) {
+        let cols = parseCSVLine(lines[i]);
+
+        let u = cleanText(cols[0]);
+        let p = cleanText(cols[1]);
+        let r = cleanText(cols[2]).toUpperCase();
+
+        if (!u || !p || !r) continue;
+
+        if (u.toLowerCase() === username.toLowerCase() && p === password) {
+          found = { username: u, role: r };
+          break;
+        }
+      }
+
+      if (!found) {
+        msgBox.innerText = "❌ Invalid Username or Password";
+        return;
+      }
+
+      currentUser = found.username;
+      currentRole = found.role;
+
+      localStorage.setItem("logged_user", currentUser);
+      localStorage.setItem("logged_role", currentRole);
+
+      msgBox.innerText = "✅ Login Success!";
+      showApp();
+
+    } catch (err) {
+      msgBox.innerText = "❌ Cannot connect to Access Sheet";
+      alert("Unable to load user access list. Check internet or publishing.");
+    }
   }
-}
 
-function showApp() {
-  document.getElementById("loginScreen").style.display = "none";
-  document.getElementById("appScreen").style.display = "block";
-  buildTabs();
-  openTab("dashboardTab");
-}
+  async function loadData() {
+    document.getElementById("statusText").innerText = "Loading data...";
 
-function buildTabs() {
+    try {
+      let csvText = await fetchCSVWithRetry(DATA_URL, 3);
+      let lines = csvText.split("\n").filter(line => line.trim() !== "");
 
-  let tabButtons = document.getElementById("tabButtons");
-  tabButtons.innerHTML = "";
+      rawHeaders = parseCSVLine(lines[0]);
 
-  let tabs = [
-    { id:"dashboardTab", name:"Dashboard" },
-    { id:"sheetTab", name:"Master Sheet" },
-    { id:"formTab", name:"Submit Form" }
-  ];
+      masterData = [];
+      let dashboardData = [];
 
-  if (currentRole === "ADMIN") {
-    tabs.push({ id:"accessTab", name:"Access" });
+      for (let i = 1; i < lines.length; i++) {
+        let cols = parseCSVLine(lines[i]);
+        masterData.push(cols);
+
+        let executive = cleanText(cols[0]);
+        let subdivision = cleanText(cols[3]);
+        let statusRaw = cleanText(cols[13]);
+
+        let miFlag = cleanText(cols[cols.length - 1]);
+        if (!miFlag.toLowerCase().includes("mi")) continue;
+
+        let status = normalizeStatus(statusRaw);
+
+        dashboardData.push({
+          Executive: executive || "Unknown",
+          "Sub Division": subdivision || "Unknown",
+          Status: status
+        });
+      }
+
+      updateDashboard(dashboardData);
+      populateSubDivisionDropdown();
+
+      document.getElementById("statusText").innerText =
+        "✅ Data Loaded Successfully (" + dashboardData.length + " Records)";
+
+      renderFullTable();
+
+    } catch (err) {
+      document.getElementById("statusText").innerText = "❌ Data Load Failed.";
+      alert("Data Load Failed. Please check internet or sheet publishing.");
+    }
   }
 
-  tabs.forEach(t => {
-    let btn = document.createElement("button");
-    btn.className = "tab-btn";
-    btn.innerText = t.name;
-    btn.onclick = () => openTab(t.id);
-    tabButtons.appendChild(btn);
-  });
-}
+  function updateDashboard(data) {
+    let totalMI = data.length;
+    let commCount = data.filter(x => x.Status === "Comm").length;
+    let nonCommCount = data.filter(x => x.Status === "Non Comm").length;
+    let neverCommCount = data.filter(x => x.Status === "Never Comm").length;
 
-function openTab(id) {
-  document.querySelectorAll(".tab-content").forEach(x => x.classList.remove("active"));
-  document.querySelectorAll(".tab-btn").forEach(x => x.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-}
+    let pendingCount = nonCommCount + neverCommCount;
 
-function addUser() {
+    let pendingPct = totalMI > 0 ? ((pendingCount / totalMI) * 100).toFixed(2) : 0;
+    let commPct = totalMI > 0 ? ((commCount / totalMI) * 100).toFixed(2) : 0;
 
-  let username = document.getElementById("newUsername").value.trim();
-  let password = document.getElementById("newPassword").value.trim();
-  let role = document.getElementById("newRole").value;
+    document.getElementById("kpi_total").innerText = totalMI;
+    document.getElementById("kpi_comm").innerText = commCount;
+    document.getElementById("kpi_noncomm").innerText = nonCommCount;
+    document.getElementById("kpi_nevercomm").innerText = neverCommCount;
+    document.getElementById("kpi_pending_pct").innerText = pendingPct + "%";
+    document.getElementById("kpi_comm_pct").innerText = commPct + "%";
 
-  if (!username || !password) {
-    alert("Username and Password required");
-    return;
+    renderStatusChart(commCount, nonCommCount, neverCommCount);
+    renderSubDivisionChart(data);
+    renderSummaryTable(data);
   }
 
-  let form = document.createElement("form");
-  form.method = "POST";
-  form.action = ADD_USER_SCRIPT_URL;
-  form.target = "hidden_iframe";
+  function renderStatusChart(comm, nonComm, neverComm) {
+    let ctx = document.getElementById("statusChart").getContext("2d");
+    if (statusChart) statusChart.destroy();
 
-  let input = document.createElement("input");
-  input.type = "hidden";
-  input.name = "data";
-  input.value = JSON.stringify({ username, password, role });
+    statusChart = new Chart(ctx, {
+      type: "pie",
+      data: {
+        labels: ["Comm", "Non Comm", "Never Comm"],
+        datasets: [{
+          data: [comm, nonComm, neverComm],
+          backgroundColor: ["#22c55e", "#f97316", "#ef4444"]
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: "bottom" },
+          datalabels: {
+            color: "#fff",
+            font: { weight: "bold" },
+            formatter: function(value, ctx) {
+              let total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+              let pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+              return pct + "%";
+            }
+          }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+  }
 
-  form.appendChild(input);
-  document.body.appendChild(form);
+  function renderSubDivisionChart(data) {
+    let subMap = {};
 
-  form.submit();
+    data.forEach(row => {
+      let sub = row["Sub Division"];
+      if (!subMap[sub]) subMap[sub] = { non: 0, never: 0 };
 
-  alert("User Added Successfully");
+      if (row.Status === "Non Comm") subMap[sub].non++;
+      if (row.Status === "Never Comm") subMap[sub].never++;
+    });
 
-  document.getElementById("newUsername").value = "";
-  document.getElementById("newPassword").value = "";
-}
+    let labels = Object.keys(subMap);
 
+    labels.sort((a, b) => {
+      let totalA = subMap[a].non + subMap[a].never;
+      let totalB = subMap[b].non + subMap[b].never;
+      return totalB - totalA;
+    });
+
+    labels = labels.slice(0, 15);
+
+    let nonValues = labels.map(x => subMap[x].non);
+    let neverValues = labels.map(x => subMap[x].never);
+
+    let ctx = document.getElementById("subdivisionChart").getContext("2d");
+    if (subdivisionChart) subdivisionChart.destroy();
+
+    subdivisionChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [
+          { label: "Non Comm", data: nonValues, backgroundColor: "#f97316" },
+          { label: "Never Comm", data: neverValues, backgroundColor: "#ef4444" }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: "bottom" },
+          datalabels: {
+            anchor: "end",
+            align: "top",
+            color: "#111",
+            font: { weight: "bold", size: 10 }
+          }
+        },
+        scales: { y: { beginAtZero: true } }
+      },
+      plugins: [ChartDataLabels]
+    });
+  }
+
+  function safeFileName(text) {
+    return String(text).replace(/[^a-z0-9]/gi, "_");
+  }
+
+  function downloadExecutivePending(executiveName, subDivisionName) {
+    let filteredRows = [];
+    filteredRows.push(rawHeaders);
+
+    for (let i = 0; i < masterData.length; i++) {
+      let row = masterData[i];
+
+      let exec = cleanText(row[0]);
+      let sub = cleanText(row[3]);
+      let status = cleanText(row[13]).toLowerCase();
+
+      if (exec === executiveName && sub === subDivisionName) {
+        if (status.includes("non") || status.includes("never")) {
+          filteredRows.push(row);
+        }
+      }
+    }
+
+    if (filteredRows.length <= 1) {
+      alert("No pending data found for this row.");
+      return;
+    }
+
+    let csvContent = filteredRows.map(r =>
+      r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+    ).join("\n");
+
+    let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    let url = URL.createObjectURL(blob);
+
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = safeFileName(executiveName + "_" + subDivisionName + "_Pending.csv");
+    a.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  function renderSummaryTable(data) {
+    let summaryMap = {};
+
+    data.forEach(row => {
+      if (row.Status !== "Non Comm" && row.Status !== "Never Comm") return;
+
+      let key = row.Executive + "||" + row["Sub Division"];
+
+      if (!summaryMap[key]) {
+        summaryMap[key] = { Executive: row.Executive, SubDivision: row["Sub Division"], non: 0, never: 0 };
+      }
+
+      if (row.Status === "Non Comm") summaryMap[key].non++;
+      if (row.Status === "Never Comm") summaryMap[key].never++;
+    });
+
+    let summaryArray = Object.values(summaryMap).map(x => ({
+      "Executive": x.Executive,
+      "Sub Division": x.SubDivision,
+      "Non Comm": x.non,
+      "Never Comm": x.never,
+      "Total Pending": x.non + x.never
+    }));
+
+    summaryArray.sort((a, b) => b["Total Pending"] - a["Total Pending"]);
+
+    let table = document.getElementById("summaryTable");
+    let thead = table.querySelector("thead");
+    let tbody = table.querySelector("tbody");
+
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
+
+    thead.innerHTML = `
+      <tr>
+        <th>Executive</th>
+        <th>Sub Division</th>
+        <th>Non Comm</th>
+        <th>Never Comm</th>
+        <th>Total Pending</th>
+        <th>Download</th>
+      </tr>
+    `;
+
+    summaryArray.forEach(row => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${row["Executive"]}</td>
+          <td>${row["Sub Division"]}</td>
+          <td>${row["Non Comm"]}</td>
+          <td>${row["Never Comm"]}</td>
+          <td>${row["Total Pending"]}</td>
+          <td>
+            <button class="download-btn"
+              onclick="downloadExecutivePending('${row["Executive"]}','${row["Sub Division"]}')">
+              Download
+            </button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  function populateSubDivisionDropdown() {
+    let dropdown = document.getElementById("subdivisionFilter");
+    let existing = dropdown.value;
+
+    let subs = new Set();
+    for (let i = 0; i < masterData.length; i++) {
+      let sub = cleanText(masterData[i][3]);
+      if (sub) subs.add(sub);
+    }
+
+    let sortedSubs = Array.from(subs).sort();
+
+    dropdown.innerHTML = `<option value="">All Sub Divisions</option>`;
+    sortedSubs.forEach(s => {
+      dropdown.innerHTML += `<option value="${s}">${s}</option>`;
+    });
+
+    dropdown.value = existing;
+  }
+
+  function renderFullTable() {
+    let filterSub = document.getElementById("subdivisionFilter").value;
+    let search = document.getElementById("searchBox").value.toLowerCase();
+
+    let table = document.getElementById("fullDataTable");
+    let thead = table.querySelector("thead");
+    let tbody = table.querySelector("tbody");
+
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
+
+    let headerRow = "<tr>";
+    rawHeaders.forEach(h => headerRow += `<th>${h}</th>`);
+    headerRow += "</tr>";
+    thead.innerHTML = headerRow;
+
+    let count = 0;
+
+    for (let i = 0; i < masterData.length; i++) {
+      let row = masterData[i];
+
+      let sub = cleanText(row[3]);
+      if (filterSub && sub !== filterSub) continue;
+
+      let rowText = row.join(" ").toLowerCase();
+      if (search && !rowText.includes(search)) continue;
+
+      count++;
+      if (count > 200) break;
+
+      let tr = "<tr>";
+      row.forEach(cell => tr += `<td>${cleanText(cell)}</td>`);
+      tr += "</tr>";
+
+      tbody.innerHTML += tr;
+    }
+  }
+
+  function exportFilteredCSV() {
+    let filterSub = document.getElementById("subdivisionFilter").value;
+    let search = document.getElementById("searchBox").value.toLowerCase();
+
+    let exportRows = [];
+    exportRows.push(rawHeaders);
+
+    for (let i = 0; i < masterData.length; i++) {
+      let row = masterData[i];
+
+      let sub = cleanText(row[3]);
+      if (filterSub && sub !== filterSub) continue;
+
+      let rowText = row.join(" ").toLowerCase();
+      if (search && !rowText.includes(search)) continue;
+
+      exportRows.push(row);
+    }
+
+    if (exportRows.length <= 1) {
+      alert("No data found for export.");
+      return;
+    }
+
+    let csvContent = exportRows.map(r =>
+      r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+    ).join("\n");
+
+    let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    let url = URL.createObjectURL(blob);
+
+    let a = document.createElement("a");
+    a.href = url;
+
+    let filename = "Filtered_Data.csv";
+    if (filterSub) filename = safeFileName(filterSub) + "_Filtered.csv";
+
+    a.download = filename;
+    a.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  async function addUser() {
+    let username = document.getElementById("newUsername").value.trim();
+    let password = document.getElementById("newPassword").value.trim();
+    let role = document.getElementById("newRole").value;
+
+    if (!username || !password) {
+      alert("❌ Username and Password cannot be empty!");
+      return;
+    }
+
+    try {
+      let resp = await fetch(ADD_USER_SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ username, password, role }),
+        headers: { "Content-Type": "application/json" }
+      });
+
+      let json = await resp.json();
+
+      if (json.status === "success") {
+        document.getElementById("accessMsg").innerText = "✅ User Added Successfully!";
+        document.getElementById("newUsername").value = "";
+        document.getElementById("newPassword").value = "";
+        renderUsersTable();
+      } else {
+        alert("❌ Error adding user: " + json.message);
+      }
+
+    } catch (err) {
+      alert("❌ Network error while adding user.");
+    }
+  }
+
+  async function renderUsersTable() {
+    let table = document.getElementById("usersTable");
+    let thead = table.querySelector("thead");
+    let tbody = table.querySelector("tbody");
+
+    thead.innerHTML = `
+      <tr>
+        <th>Username</th>
+        <th>Password</th>
+        <th>Role</th>
+      </tr>
+    `;
+
+    tbody.innerHTML = "";
+
+    try {
+      let csvText = await fetchCSVWithRetry(ACCESS_SHEET_URL, 3);
+      let lines = csvText.split("\n").filter(l => l.trim() !== "");
+
+      for (let i = 1; i < lines.length; i++) {
+        let cols = parseCSVLine(lines[i]);
+
+        let u = cleanText(cols[0]);
+        let p = cleanText(cols[1]);
+        let r = cleanText(cols[2]);
+
+        if (!u || !p || !r) continue;
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${u}</td>
+            <td>${p}</td>
+            <td>${r}</td>
+          </tr>
+        `;
+      }
+
+    } catch (err) {
+      tbody.innerHTML = "<tr><td colspan='3'>❌ Unable to load users</td></tr>";
+    }
+  }
+
+  // AUTO LOGIN IF ALREADY LOGGED
+  window.onload = function() {
+    let savedUser = localStorage.getItem("logged_user");
+    let savedRole = localStorage.getItem("logged_role");
+
+    if (savedUser && savedRole) {
+      currentUser = savedUser;
+      currentRole = savedRole;
+      showApp();
+    }
+  };
 </script>
 
 </body>
