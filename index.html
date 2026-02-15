@@ -219,28 +219,6 @@
       margin-top:10px;
       font-weight:bold;
     }
-
-    .password-box {
-      position:relative;
-      width:100%;
-      margin-top:12px;
-    }
-
-    .password-box input {
-      width:100%;
-      padding-right:50px;
-      margin-top:0px;
-    }
-
-    .eye-btn {
-      position:absolute;
-      right:15px;
-      top:50%;
-      transform:translateY(-50%);
-      cursor:pointer;
-      font-size:18px;
-      user-select:none;
-    }
   </style>
 </head>
 
@@ -252,11 +230,7 @@
   <p>Please login to continue</p>
 
   <input type="text" id="loginUsername" placeholder="Enter Username"/>
-
-  <div class="password-box">
-    <input type="password" id="loginPassword" placeholder="Enter Password"/>
-    <span class="eye-btn" onclick="togglePassword()">👁️</span>
-  </div>
+  <input type="password" id="loginPassword" placeholder="Enter Password"/>
 
   <button class="login-btn" onclick="login()">Login</button>
 
@@ -366,7 +340,7 @@
     <!-- ACCESS MANAGEMENT TAB (ADMIN ONLY) -->
     <div id="accessTab" class="tab-content">
       <h3>🔐 Access Management</h3>
-      <p class="smalltext">Admin can add users here. It will save directly into Google Sheet.</p>
+      <p class="smalltext">Admin can add or remove users here.</p>
 
       <div class="table-area">
         <h3>Add New User</h3>
@@ -386,7 +360,7 @@
       </div>
 
       <div class="table-area">
-        <h3>Existing Users (From Sheet)</h3>
+        <h3>Existing Users</h3>
 
         <table id="usersTable">
           <thead></thead>
@@ -406,24 +380,6 @@
 <script>
   const ADMIN_USERNAME = "porag.das";
   const ADMIN_PASSWORD = "gknayakg07";
-const MANUAL_USERS = [
-  { username: "Rhittik.bt@maintenance.in", password: "Rhittik@123", role: "EXECUTIVE" },
-  { username: "tech1", password: "tech@123", role: "TECHNICIAN" },
-  { username: "exec2", password: "exec@123", role: "EXECUTIVE" }
-  const GOOGLE_FORM_URL =
-    "https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform";
-
-  // MASTER DATA SHEET CSV
-  const DATA_URL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pub?gid=405039605&single=true&output=csv";
-
-  // ACCESS SHEET CSV
-  const ACCESS_SHEET_URL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSQEYtdLJy6g0hojsLh-dPPMc8UFOFFw7aOSM7YUcoO7i6eq_ZCbXSuCGD4A8D_hzh2jb4OuxAGdzaQ/pub?gid=0&single=true&output=csv";
-
-  // APPS SCRIPT URL (WRITE USER)
-  const ADD_USER_SCRIPT_URL =
-    "https://script.google.com/macros/s/AKfycbzko5XYC3R4qkNVxRRGYZ0MrOHasS2nI5T5qpSMQhh6BtL9srGzYa9nIAfbK7o--0SD/exec";
 
   let currentUser = null;
   let currentRole = null;
@@ -433,13 +389,57 @@ const MANUAL_USERS = [
   let masterData = [];
   let rawHeaders = [];
 
-  function togglePassword() {
-    let pass = document.getElementById("loginPassword");
-    pass.type = pass.type === "password" ? "text" : "password";
-  }
+  const DATA_URL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pub?gid=405039605&single=true&output=csv";
 
   function openSubmitForm() {
-    window.open(GOOGLE_FORM_URL, "_blank");
+    window.open(
+      "https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform",
+      "_blank"
+    );
+  }
+
+  function getUsers() {
+    let users = localStorage.getItem("users_list");
+    if (!users) return [];
+    return JSON.parse(users);
+  }
+
+  function saveUsers(users) {
+    localStorage.setItem("users_list", JSON.stringify(users));
+  }
+
+  function login() {
+    let username = document.getElementById("loginUsername").value.trim();
+    let password = document.getElementById("loginPassword").value.trim();
+    let msgBox = document.getElementById("loginMsg");
+
+    msgBox.innerText = "";
+
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      currentUser = username;
+      currentRole = "ADMIN";
+      localStorage.setItem("logged_user", username);
+      localStorage.setItem("logged_role", currentRole);
+      showApp();
+      return;
+    }
+
+    let users = getUsers();
+    let found = users.find(u => u.username === username && u.password === password);
+
+    if (!found) {
+      msgBox.innerText = "❌ Access Denied (Invalid Username or Password)";
+      return;
+    }
+
+    currentUser = found.username;
+    currentRole = found.role;
+
+    localStorage.setItem("logged_user", currentUser);
+    localStorage.setItem("logged_role", currentRole);
+
+    showApp();
   }
 
   function logout() {
@@ -560,83 +560,13 @@ const MANUAL_USERS = [
         if (!response.ok) throw new Error("HTTP Error");
 
         let text = await response.text();
-        if (text.length < 1000) throw new Error("Incomplete Data");
+        if (text.length < 5000) throw new Error("Incomplete Data");
 
         return text;
       } catch (err) {
         if (i === retries - 1) throw err;
         await new Promise(resolve => setTimeout(resolve, 500));
       }
-    }
-  }
-
-  async function login() {
-    let username = document.getElementById("loginUsername").value.trim();
-    let password = document.getElementById("loginPassword").value.trim();
-    let msgBox = document.getElementById("loginMsg");
-
-    msgBox.innerText = "";
-
-    if (!username || !password) {
-      msgBox.innerText = "❌ Enter Username and Password";
-      return;
-    }
-
-    // FIXED ADMIN LOGIN
-    if (
-      username.toLowerCase() === ADMIN_USERNAME.toLowerCase() &&
-      password === ADMIN_PASSWORD
-    ) {
-      currentUser = username;
-      currentRole = "ADMIN";
-
-      localStorage.setItem("logged_user", currentUser);
-      localStorage.setItem("logged_role", currentRole);
-
-      showApp();
-      return;
-    }
-
-    try {
-      msgBox.innerText = "🔍 Checking access...";
-
-      let csvText = await fetchCSVWithRetry(ACCESS_SHEET_URL, 3);
-      let lines = csvText.split("\n").filter(l => l.trim() !== "");
-
-      let found = null;
-
-      for (let i = 1; i < lines.length; i++) {
-        let cols = parseCSVLine(lines[i]);
-
-        let u = cleanText(cols[0]);
-        let p = cleanText(cols[1]);
-        let r = cleanText(cols[2]).toUpperCase();
-
-        if (!u || !p || !r) continue;
-
-        if (u.toLowerCase() === username.toLowerCase() && p === password) {
-          found = { username: u, role: r };
-          break;
-        }
-      }
-
-      if (!found) {
-        msgBox.innerText = "❌ Invalid Username or Password";
-        return;
-      }
-
-      currentUser = found.username;
-      currentRole = found.role;
-
-      localStorage.setItem("logged_user", currentUser);
-      localStorage.setItem("logged_role", currentRole);
-
-      msgBox.innerText = "✅ Login Success!";
-      showApp();
-
-    } catch (err) {
-      msgBox.innerText = "❌ Cannot connect to Access Sheet";
-      alert("Unable to load user access list. Check internet or publishing.");
     }
   }
 
@@ -1000,40 +930,44 @@ const MANUAL_USERS = [
     URL.revokeObjectURL(url);
   }
 
-  async function addUser() {
+  function addUser() {
     let username = document.getElementById("newUsername").value.trim();
     let password = document.getElementById("newPassword").value.trim();
     let role = document.getElementById("newRole").value;
 
+    let msg = document.getElementById("accessMsg");
+    msg.innerText = "";
+
     if (!username || !password) {
-      alert("❌ Username and Password cannot be empty!");
+      alert("Enter username and password.");
       return;
     }
 
-    try {
-      let resp = await fetch(ADD_USER_SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({ username, password, role }),
-        headers: { "Content-Type": "application/json" }
-      });
+    let users = getUsers();
 
-      let json = await resp.json();
-
-      if (json.status === "success") {
-        document.getElementById("accessMsg").innerText = "✅ User Added Successfully!";
-        document.getElementById("newUsername").value = "";
-        document.getElementById("newPassword").value = "";
-        renderUsersTable();
-      } else {
-        alert("❌ Error adding user: " + json.message);
-      }
-
-    } catch (err) {
-      alert("❌ Network error while adding user.");
+    if (users.find(u => u.username === username)) {
+      alert("User already exists!");
+      return;
     }
+
+    users.push({ username, password, role });
+    saveUsers(users);
+
+    document.getElementById("newUsername").value = "";
+    document.getElementById("newPassword").value = "";
+
+    msg.innerText = "✅ User Added Successfully!";
+    renderUsersTable();
   }
 
-  async function renderUsersTable() {
+  function deleteUser(username) {
+    let users = getUsers();
+    users = users.filter(u => u.username !== username);
+    saveUsers(users);
+    renderUsersTable();
+  }
+
+  function renderUsersTable() {
     let table = document.getElementById("usersTable");
     let thead = table.querySelector("thead");
     let tbody = table.querySelector("tbody");
@@ -1043,36 +977,29 @@ const MANUAL_USERS = [
         <th>Username</th>
         <th>Password</th>
         <th>Role</th>
+        <th>Delete</th>
       </tr>
     `;
 
     tbody.innerHTML = "";
 
-    try {
-      let csvText = await fetchCSVWithRetry(ACCESS_SHEET_URL, 3);
-      let lines = csvText.split("\n").filter(l => l.trim() !== "");
+    let users = getUsers();
 
-      for (let i = 1; i < lines.length; i++) {
-        let cols = parseCSVLine(lines[i]);
-
-        let u = cleanText(cols[0]);
-        let p = cleanText(cols[1]);
-        let r = cleanText(cols[2]);
-
-        if (!u || !p || !r) continue;
-
-        tbody.innerHTML += `
-          <tr>
-            <td>${u}</td>
-            <td>${p}</td>
-            <td>${r}</td>
-          </tr>
-        `;
-      }
-
-    } catch (err) {
-      tbody.innerHTML = "<tr><td colspan='3'>❌ Unable to load users</td></tr>";
-    }
+    users.forEach(u => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${u.username}</td>
+          <td>${u.password}</td>
+          <td>${u.role}</td>
+          <td>
+            <button class="download-btn" style="background:#ef4444;"
+              onclick="deleteUser('${u.username}')">
+              Delete
+            </button>
+          </td>
+        </tr>
+      `;
+    });
   }
 
   // AUTO LOGIN IF ALREADY LOGGED
