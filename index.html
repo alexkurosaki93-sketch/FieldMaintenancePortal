@@ -390,10 +390,20 @@
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pub?gid=405039605&single=true&output=csv";
 
   function getUsers() {
-    let users = localStorage.getItem("users_list");
-    if (!users) return [];
-    return JSON.parse(users);
+  let users = localStorage.getItem("users_list");
+
+  let defaultUsers = [
+    { username: "executive1", password: "1234", role: "EXECUTIVE" }
+  ];
+
+  if (!users) {
+    localStorage.setItem("users_list", JSON.stringify(defaultUsers));
+    return defaultUsers;
   }
+
+  return JSON.parse(users);
+}
+
 
   function saveUsers(users) {
     localStorage.setItem("users_list", JSON.stringify(users));
