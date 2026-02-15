@@ -51,7 +51,6 @@
       border-radius:10px;
       cursor:pointer;
       margin-bottom:15px;
-      font-weight:bold;
     }
     .refresh-btn:hover {background:#1d4ed8;}
 
@@ -167,6 +166,15 @@
     }
 
     .download-btn:hover {background:#15803d;}
+
+    iframe {
+      width:100%;
+      height:900px;
+      border:none;
+      border-radius:12px;
+      background:white;
+      box-shadow:0px 2px 8px rgba(0,0,0,0.1);
+    }
 
     /* LOGIN PAGE */
     .login-box {
@@ -321,20 +329,9 @@
     <!-- FORM TAB -->
     <div id="formTab" class="tab-content">
       <h3>📝 Submit Field Report</h3>
-      <p class="smalltext">
-        Click the button below to open the form and submit your work update.
-      </p>
+      <p class="smalltext">Fill the form below to submit your work update.</p>
 
-      <button class="refresh-btn" onclick="openSubmitForm()">
-        📝 Open Submit Form
-      </button>
-
-      <div class="table-area">
-        <h3>Form Link</h3>
-        <p class="smalltext">
-          https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform
-        </p>
-      </div>
+      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform?embedded=true"></iframe>
     </div>
 
     <!-- ACCESS MANAGEMENT TAB (ADMIN ONLY) -->
@@ -391,13 +388,6 @@
 
   const DATA_URL =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pub?gid=405039605&single=true&output=csv";
-
-  function openSubmitForm() {
-    window.open(
-      "https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform",
-      "_blank"
-    );
-  }
 
   function getUsers() {
     let users = localStorage.getItem("users_list");
@@ -506,10 +496,9 @@
 
     let buttons = document.querySelectorAll(".tab-btn");
     buttons.forEach(btn => {
-      if (btn.innerText.includes("Dashboard") && tabId === "dashboardTab") btn.classList.add("active");
-      if (btn.innerText.includes("Master") && tabId === "sheetTab") btn.classList.add("active");
-      if (btn.innerText.includes("Submit") && tabId === "formTab") btn.classList.add("active");
-      if (btn.innerText.includes("Access") && tabId === "accessTab") btn.classList.add("active");
+      if (btn.onclick.toString().includes(tabId)) {
+        btn.classList.add("active");
+      }
     });
   }
 
@@ -725,7 +714,7 @@
   }
 
   function safeFileName(text) {
-    return String(text).replace(/[^a-z0-9]/gi, "_");
+    return text.replace(/[^a-z0-9]/gi, "_");
   }
 
   function downloadExecutivePending(executiveName, subDivisionName) {
@@ -767,151 +756,141 @@
   }
 
   function renderSummaryTable(data) {
-    let summaryMap = {};
+    let summary = {};
 
     data.forEach(row => {
-      if (row.Status !== "Non Comm" && row.Status !== "Never Comm") return;
+      let exec = row.Executive;
+      let sub = row["Sub Division"];
+      let key = exec + "___" + sub;
 
-      let key = row.Executive + "||" + row["Sub Division"];
-
-      if (!summaryMap[key]) {
-        summaryMap[key] = { Executive: row.Executive, SubDivision: row["Sub Division"], non: 0, never: 0 };
+      if (!summary[key]) {
+        summary[key] = { Executive: exec, "Sub Division": sub, "Non Comm": 0, "Never Comm": 0 };
       }
 
-      if (row.Status === "Non Comm") summaryMap[key].non++;
-      if (row.Status === "Never Comm") summaryMap[key].never++;
+      if (row.Status === "Non Comm") summary[key]["Non Comm"]++;
+      if (row.Status === "Never Comm") summary[key]["Never Comm"]++;
     });
 
-    let summaryArray = Object.values(summaryMap).map(x => ({
-      "Executive": x.Executive,
-      "Sub Division": x.SubDivision,
-      "Non Comm": x.non,
-      "Never Comm": x.never,
-      "Total Pending": x.non + x.never
-    }));
+    let summaryArray = Object.values(summary);
 
+    summaryArray.forEach(x => x["Total Pending"] = x["Non Comm"] + x["Never Comm"]);
     summaryArray.sort((a, b) => b["Total Pending"] - a["Total Pending"]);
 
-    let table = document.getElementById("summaryTable");
-    let thead = table.querySelector("thead");
-    let tbody = table.querySelector("tbody");
+    let tableHead = document.querySelector("#summaryTable thead");
+    let tableBody = document.querySelector("#summaryTable tbody");
 
-    thead.innerHTML = "";
-    tbody.innerHTML = "";
+    tableHead.innerHTML = "";
+    tableBody.innerHTML = "";
 
-    thead.innerHTML = `
-      <tr>
-        <th>Executive</th>
-        <th>Sub Division</th>
-        <th>Non Comm</th>
-        <th>Never Comm</th>
-        <th>Total Pending</th>
-        <th>Download</th>
-      </tr>
-    `;
+    let headers = ["Executive", "Sub Division", "Non Comm", "Never Comm", "Total Pending", "Download"];
+
+    let headRow = "<tr>";
+    headers.forEach(h => headRow += `<th>${h}</th>`);
+    headRow += "</tr>";
+    tableHead.innerHTML = headRow;
 
     summaryArray.forEach(row => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${row["Executive"]}</td>
-          <td>${row["Sub Division"]}</td>
-          <td>${row["Non Comm"]}</td>
-          <td>${row["Never Comm"]}</td>
-          <td>${row["Total Pending"]}</td>
-          <td>
-            <button class="download-btn"
-              onclick="downloadExecutivePending('${row["Executive"]}','${row["Sub Division"]}')">
-              Download
-            </button>
-          </td>
-        </tr>
+      let tr = "<tr>";
+
+      tr += `<td>${row["Executive"]}</td>`;
+      tr += `<td>${row["Sub Division"]}</td>`;
+      tr += `<td>${row["Non Comm"]}</td>`;
+      tr += `<td>${row["Never Comm"]}</td>`;
+      tr += `<td>${row["Total Pending"]}</td>`;
+
+      tr += `
+        <td>
+          <button class="download-btn"
+            onclick="downloadExecutivePending('${row["Executive"]}','${row["Sub Division"]}')">
+            Download
+          </button>
+        </td>
       `;
+
+      tr += "</tr>";
+      tableBody.innerHTML += tr;
     });
   }
 
   function populateSubDivisionDropdown() {
     let dropdown = document.getElementById("subdivisionFilter");
-    let existing = dropdown.value;
+    dropdown.innerHTML = `<option value="">All Sub Divisions</option>`;
 
-    let subs = new Set();
+    let subSet = new Set();
+
     for (let i = 0; i < masterData.length; i++) {
       let sub = cleanText(masterData[i][3]);
-      if (sub) subs.add(sub);
+      if (sub) subSet.add(sub);
     }
 
-    let sortedSubs = Array.from(subs).sort();
+    let subs = Array.from(subSet).sort();
 
-    dropdown.innerHTML = `<option value="">All Sub Divisions</option>`;
-    sortedSubs.forEach(s => {
-      dropdown.innerHTML += `<option value="${s}">${s}</option>`;
+    subs.forEach(sub => {
+      let opt = document.createElement("option");
+      opt.value = sub;
+      opt.textContent = sub;
+      dropdown.appendChild(opt);
     });
-
-    dropdown.value = existing;
   }
 
   function renderFullTable() {
-    let filterSub = document.getElementById("subdivisionFilter").value;
-    let search = document.getElementById("searchBox").value.toLowerCase();
+    let dropdownVal = document.getElementById("subdivisionFilter").value;
+    let searchVal = document.getElementById("searchBox").value.toLowerCase();
 
-    let table = document.getElementById("fullDataTable");
-    let thead = table.querySelector("thead");
-    let tbody = table.querySelector("tbody");
+    let tableHead = document.querySelector("#fullDataTable thead");
+    let tableBody = document.querySelector("#fullDataTable tbody");
 
-    thead.innerHTML = "";
-    tbody.innerHTML = "";
+    tableHead.innerHTML = "";
+    tableBody.innerHTML = "";
 
-    let headerRow = "<tr>";
-    rawHeaders.forEach(h => headerRow += `<th>${h}</th>`);
-    headerRow += "</tr>";
-    thead.innerHTML = headerRow;
+    let headRow = "<tr>";
+    rawHeaders.forEach(h => headRow += `<th>${h}</th>`);
+    headRow += "</tr>";
+    tableHead.innerHTML = headRow;
 
-    let count = 0;
+    let rowLimit = 200;
+    let shown = 0;
 
     for (let i = 0; i < masterData.length; i++) {
       let row = masterData[i];
-
       let sub = cleanText(row[3]);
-      if (filterSub && sub !== filterSub) continue;
+
+      if (dropdownVal && sub !== dropdownVal) continue;
 
       let rowText = row.join(" ").toLowerCase();
-      if (search && !rowText.includes(search)) continue;
-
-      count++;
-      if (count > 200) break;
+      if (searchVal && !rowText.includes(searchVal)) continue;
 
       let tr = "<tr>";
       row.forEach(cell => tr += `<td>${cleanText(cell)}</td>`);
       tr += "</tr>";
 
-      tbody.innerHTML += tr;
+      tableBody.innerHTML += tr;
+
+      shown++;
+      if (shown >= rowLimit) break;
     }
   }
 
   function exportFilteredCSV() {
-    let filterSub = document.getElementById("subdivisionFilter").value;
-    let search = document.getElementById("searchBox").value.toLowerCase();
+    let dropdownVal = document.getElementById("subdivisionFilter").value;
+    let searchVal = document.getElementById("searchBox").value.toLowerCase();
 
-    let exportRows = [];
-    exportRows.push(rawHeaders);
+    let filteredRows = [];
+    filteredRows.push(rawHeaders);
 
     for (let i = 0; i < masterData.length; i++) {
       let row = masterData[i];
-
       let sub = cleanText(row[3]);
-      if (filterSub && sub !== filterSub) continue;
+
+      if (dropdownVal && sub !== dropdownVal) continue;
 
       let rowText = row.join(" ").toLowerCase();
-      if (search && !rowText.includes(search)) continue;
+      if (searchVal && !rowText.includes(searchVal)) continue;
 
-      exportRows.push(row);
+      filteredRows.push(row);
     }
 
-    if (exportRows.length <= 1) {
-      alert("No data found for export.");
-      return;
-    }
-
-    let csvContent = exportRows.map(r =>
+    let csvContent = filteredRows.map(r =>
       r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")
     ).join("\n");
 
@@ -920,11 +899,7 @@
 
     let a = document.createElement("a");
     a.href = url;
-
-    let filename = "Filtered_Data.csv";
-    if (filterSub) filename = safeFileName(filterSub) + "_Filtered.csv";
-
-    a.download = filename;
+    a.download = "Filtered_Master_Data.csv";
     a.click();
 
     URL.revokeObjectURL(url);
@@ -939,24 +914,28 @@
     msg.innerText = "";
 
     if (!username || !password) {
-      alert("Enter username and password.");
+      msg.innerText = "❌ Please enter username and password.";
+      msg.style.color = "red";
       return;
     }
 
     let users = getUsers();
 
     if (users.find(u => u.username === username)) {
-      alert("User already exists!");
+      msg.innerText = "❌ Username already exists.";
+      msg.style.color = "red";
       return;
     }
 
     users.push({ username, password, role });
     saveUsers(users);
 
+    msg.innerText = "✅ User Added Successfully!";
+    msg.style.color = "green";
+
     document.getElementById("newUsername").value = "";
     document.getElementById("newPassword").value = "";
 
-    msg.innerText = "✅ User Added Successfully!";
     renderUsersTable();
   }
 
@@ -968,41 +947,24 @@
   }
 
   function renderUsersTable() {
-    let table = document.getElementById("usersTable");
-    let thead = table.querySelector("thead");
-    let tbody = table.querySelector("tbody");
-
-    thead.innerHTML = `
-      <tr>
-        <th>Username</th>
-        <th>Password</th>
-        <th>Role</th>
-        <th>Delete</th>
-      </tr>
-    `;
-
-    tbody.innerHTML = "";
-
     let users = getUsers();
 
+    let head = document.querySelector("#usersTable thead");
+    let body = document.querySelector("#usersTable tbody");
+
+    head.innerHTML = "<tr><th>Username</th><th>Role</th><th>Delete</th></tr>";
+    body.innerHTML = "";
+
     users.forEach(u => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${u.username}</td>
-          <td>${u.password}</td>
-          <td>${u.role}</td>
-          <td>
-            <button class="download-btn" style="background:#ef4444;"
-              onclick="deleteUser('${u.username}')">
-              Delete
-            </button>
-          </td>
-        </tr>
-      `;
+      let tr = "<tr>";
+      tr += `<td>${u.username}</td>`;
+      tr += `<td>${u.role}</td>`;
+      tr += `<td><button class="download-btn" style="background:#ef4444;" onclick="deleteUser('${u.username}')">Delete</button></td>`;
+      tr += "</tr>";
+      body.innerHTML += tr;
     });
   }
 
-  // AUTO LOGIN IF ALREADY LOGGED
   window.onload = function() {
     let savedUser = localStorage.getItem("logged_user");
     let savedRole = localStorage.getItem("logged_role");
