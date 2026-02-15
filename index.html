@@ -978,6 +978,16 @@
     });
     saveUsers(users);
   }
+window.onload = function() {
+  let savedUser = localStorage.getItem("logged_user");
+  let savedRole = localStorage.getItem("logged_role");
+
+  if (savedUser && savedRole) {
+    currentUser = savedUser;
+    currentRole = savedRole;
+    showApp();
+  }
+};
 
   // 🔐 Auto login if already logged
   let savedUser = localStorage.getItem("logged_user");
