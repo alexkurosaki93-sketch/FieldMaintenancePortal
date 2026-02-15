@@ -966,16 +966,26 @@
   }
 
   window.onload = function() {
-    let savedUser = localStorage.getItem("logged_user");
-    let savedRole = localStorage.getItem("logged_role");
 
-    if (savedUser && savedRole) {
-      currentUser = savedUser;
-      currentRole = savedRole;
-      showApp();
-    }
-  };
-</script>
+  // 🔐 Add default executive user if not exists
+  let users = getUsers();
 
-</body>
-</html>
+  if (!users.find(u => u.username === "Rhittik.bt@maintenance.in")) {
+    users.push({
+      username: "Rhittik.bt@maintenance.in",
+      password: "Rhittik@123",
+      role: "EXECUTIVE"
+    });
+    saveUsers(users);
+  }
+
+  // 🔐 Auto login if already logged
+  let savedUser = localStorage.getItem("logged_user");
+  let savedRole = localStorage.getItem("logged_role");
+
+  if (savedUser && savedRole) {
+    currentUser = savedUser;
+    currentRole = savedRole;
+    showApp();
+  }
+};
