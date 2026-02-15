@@ -337,30 +337,32 @@
     <!-- ACCESS MANAGEMENT TAB (ADMIN ONLY) -->
     <div id="accessTab" class="tab-content">
       <h3>🔐 Access Management</h3>
-      <p class="smalltext">Users are now managed from Google Sheet (Access Database).</p>
+      <p class="smalltext">Admin can add or remove users here.</p>
 
       <div class="table-area">
-        <h3>⚠ Manage Users in Google Sheet</h3>
-        <p class="smalltext">
-          Admin can add/remove users by editing the Google Sheet named <b>Access</b>.
-        </p>
-        <p class="smalltext">
-          This ensures login works on all phones and devices.
-        </p>
+        <h3>Add New User</h3>
 
-        <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vSQEYtdLJy6g0hojsLh-dPPMc8UFOFFw7aOSM7YUcoO7i6eq_ZCbXSuCGD4A8D_hzh2jb4OuxAGdzaQ/pubhtml"
-           target="_blank"
-           style="display:inline-block;padding:12px 15px;background:#2563eb;color:white;border-radius:10px;text-decoration:none;font-weight:bold;">
-          Open Access Sheet
-        </a>
+        <input type="text" id="newUsername" placeholder="Enter Username"/>
+        <input type="password" id="newPassword" placeholder="Enter Password"/>
+
+        <select id="newRole">
+          <option value="EXECUTIVE">EXECUTIVE</option>
+          <option value="TECHNICIAN">TECHNICIAN</option>
+          <option value="ADMIN">ADMIN</option>
+        </select>
+
+        <button class="export-btn" onclick="addUser()">➕ Add User</button>
+
+        <div id="accessMsg" class="success-text"></div>
       </div>
 
       <div class="table-area">
-        <h3>ℹ Note</h3>
-        <p class="smalltext">
-          This portal no longer uses localStorage for user database.
-          It fetches users from Google Sheet.
-        </p>
+        <h3>Existing Users</h3>
+
+        <table id="usersTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
       </div>
     </div>
 
@@ -387,8 +389,48 @@
   const DATA_URL =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pub?gid=405039605&single=true&output=csv";
 
-  const USERS_URL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vSQEYtdLJy6g0hojsLh-dPPMc8UFOFFw7aOSM7YUcoO7i6eq_ZCbXSuCGD4A8D_hzh2jb4OuxAGdzaQ/pub?gid=0&single=true&output=csv";
+  function getUsers() {
+    let users = localStorage.getItem("users_list");
+    if (!users) return [];
+    return JSON.parse(users);
+  }
+
+  function saveUsers(users) {
+    localStorage.setItem("users_list", JSON.stringify(users));
+  }
+
+  function login() {
+    let username = document.getElementById("loginUsername").value.trim();
+    let password = document.getElementById("loginPassword").value.trim();
+    let msgBox = document.getElementById("loginMsg");
+
+    msgBox.innerText = "";
+
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      currentUser = username;
+      currentRole = "ADMIN";
+      localStorage.setItem("logged_user", username);
+      localStorage.setItem("logged_role", currentRole);
+      showApp();
+      return;
+    }
+
+    let users = getUsers();
+    let found = users.find(u => u.username === username && u.password === password);
+
+    if (!found) {
+      msgBox.innerText = "❌ Access Denied (Invalid Username or Password)";
+      return;
+    }
+
+    currentUser = found.username;
+    currentRole = found.role;
+
+    localStorage.setItem("logged_user", currentUser);
+    localStorage.setItem("logged_role", currentRole);
+
+    showApp();
+  }
 
   function logout() {
     localStorage.removeItem("logged_user");
@@ -417,6 +459,10 @@
     setInterval(() => {
       loadData();
     }, 300000);
+
+    if (currentRole === "ADMIN") {
+      renderUsersTable();
+    }
   }
 
   function buildTabsByRole() {
@@ -425,7 +471,7 @@
 
     let tabs = [
       { id: "dashboardTab", name: "📊 Dashboard" },
-      { id:: "sheetTab", name: "📑 Master Sheet" },
+      { id: "sheetTab", name: "📑 Master Sheet" },
       { id: "formTab", name: "📝 Submit Form" }
     ];
 
@@ -492,70 +538,6 @@
 
     result.push(current);
     return result;
-  }
-
-  async function getUsersFromSheet() {
-    let response = await fetch(USERS_URL + "&nocache=" + new Date().getTime());
-    let text = await response.text();
-
-    let lines = text.split("\n").filter(x => x.trim() !== "");
-
-    let users = [];
-
-    for (let i = 1; i < lines.length; i++) {
-      let cols = parseCSVLine(lines[i]);
-
-      let username = cleanText(cols[0]);
-      let password = cleanText(cols[1]);
-      let role = cleanText(cols[2]);
-
-      if (username && password && role) {
-        users.push({ username, password, role });
-      }
-    }
-
-    return users;
-  }
-
-  async function login() {
-    let username = document.getElementById("loginUsername").value.trim();
-    let password = document.getElementById("loginPassword").value.trim();
-    let msgBox = document.getElementById("loginMsg");
-
-    msgBox.innerText = "⏳ Checking access...";
-
-    // Admin login (offline)
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      currentUser = username;
-      currentRole = "ADMIN";
-      localStorage.setItem("logged_user", username);
-      localStorage.setItem("logged_role", currentRole);
-      showApp();
-      return;
-    }
-
-    try {
-      let users = await getUsersFromSheet();
-
-      let found = users.find(u => u.username === username && u.password === password);
-
-      if (!found) {
-        msgBox.innerText = "❌ Access Denied (Invalid Username or Password)";
-        return;
-      }
-
-      currentUser = found.username;
-      currentRole = found.role;
-
-      localStorage.setItem("logged_user", currentUser);
-      localStorage.setItem("logged_role", currentRole);
-
-      showApp();
-
-    } catch (err) {
-      msgBox.innerText = "❌ Login Failed (Access Sheet Not Reachable)";
-      alert("Could not load Access sheet. Check publishing settings.");
-    }
   }
 
   async function fetchCSVWithRetry(url, retries = 3) {
@@ -921,6 +903,66 @@
     a.click();
 
     URL.revokeObjectURL(url);
+  }
+
+  function addUser() {
+    let username = document.getElementById("newUsername").value.trim();
+    let password = document.getElementById("newPassword").value.trim();
+    let role = document.getElementById("newRole").value;
+
+    let msg = document.getElementById("accessMsg");
+    msg.innerText = "";
+
+    if (!username || !password) {
+      msg.innerText = "❌ Please enter username and password.";
+      msg.style.color = "red";
+      return;
+    }
+
+    let users = getUsers();
+
+    if (users.find(u => u.username === username)) {
+      msg.innerText = "❌ Username already exists.";
+      msg.style.color = "red";
+      return;
+    }
+
+    users.push({ username, password, role });
+    saveUsers(users);
+
+    msg.innerText = "✅ User Added Successfully!";
+    msg.style.color = "green";
+
+    document.getElementById("newUsername").value = "";
+    document.getElementById("newPassword").value = "";
+
+    renderUsersTable();
+  }
+
+  function deleteUser(username) {
+    let users = getUsers();
+    users = users.filter(u => u.username !== username);
+    saveUsers(users);
+    renderUsersTable();
+  }
+
+  function renderUsersTable() {
+    let users = getUsers();
+
+    let head = document.querySelector("#usersTable thead");
+    let body = document.querySelector("#usersTable tbody");
+
+    head.innerHTML = "<tr><th>Username</th><th>Role</th><th>Delete</th></tr>";
+    body.innerHTML = "";
+
+    users.forEach(u => {
+      let tr = "<tr>";
+      tr += `<td>${u.username}</td>`;
+      tr += `<td>${u.role}</td>`;
+      tr += `<td><button class="download-btn" style="background:#ef4444;" onclick="deleteUser('${u.username}')">Delete</button></td>`;
+      tr += "</tr>";
+      body.innerHTML += tr;
+    });
   }
 
   window.onload = function() {
