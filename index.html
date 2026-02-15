@@ -391,7 +391,15 @@
 
   function getUsers() {
   let users = localStorage.getItem("users_list");
-  let userArray = users ? JSON.parse(users) : [];
+  let userArray = [];
+
+  try {
+    userArray = users ? JSON.parse(users) : [];
+  } catch (e) {
+    console.log("Corrupted users_list found. Resetting...");
+    userArray = [];
+    localStorage.removeItem("users_list");
+  }
 
   // DEFAULT USERS (AUTO ADD)
   let defaultUsers = [
@@ -406,11 +414,11 @@
     }
   });
 
-  // Save back updated list
   localStorage.setItem("users_list", JSON.stringify(userArray));
 
   return userArray;
 }
+
 
 
   return JSON.parse(users);
