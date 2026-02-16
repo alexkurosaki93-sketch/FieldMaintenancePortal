@@ -190,6 +190,41 @@
 
   const DATA_URL =
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pub?gid=405039605&single=true&output=csv";
+const SUBDIVISION_FILE_LINKS = {
+  "UMRANGSO_CODE-167": "https://drive.google.com/uc?export=download&id=1QHl7uglnHRV4okHkLv9gnuy-Lc4AMQMF",
+  "NAMRUP_CODE-221": "https://drive.google.com/uc?export=download&id=152NVkIibOe-1Txjo103KPzcMJ1dIjF-w",
+  "MAIBONG_CODE-166": "https://drive.google.com/uc?export=download&id=14hKCPypO9jWdIUexJdJYhexo2K81XVO_",
+  "MAHUR_CODE-165": "https://drive.google.com/uc?export=download&id=1Ug4OsZSTvhqC8EAx_CgEoRPuA2NlFQQp",
+  "LUMMDING_CODE-155": "https://drive.google.com/uc?export=download&id=1maT8IA6LjLofKsRN6tDzQfSIhoJat8b0",
+  "KHERONI_CODE-161": "https://drive.google.com/uc?export=download&id=10-QiuRjqWFVptZsBWWzX_6XqewYfyMtu",
+  "KALAIGAON_CODE-091": "https://drive.google.com/uc?export=download&id=1W3wzhxJDcELhvfD4RDT3Pavd91f5eMpb",
+  "JONAI_CODE-237": "https://drive.google.com/uc?export=download&id=1XA6pRRTwqx6pvocJXJxFBwQl3X2i3qsm",
+  "JAMUGURI_CODE-107": "https://drive.google.com/uc?export=download&id=1unFyIBB0ngqzxCDvoLT7bUVEAkTEDQAy",
+  "HAMREN_CODE-162": "https://drive.google.com/uc?export=download&id=1nJfyfXPW2S58GiXSvy5UjNLmyJbHJk3N",
+  "BOITHALANGSUESC_CODE-163": "https://drive.google.com/uc?export=download&id=1LuYQkKAHIjpkB1MfqiFQpzcNK_umWGKA",
+  "BALIPARA_CODE-096": "https://drive.google.com/uc?export=download&id=1ewOGApXCG_l1rWQPT-Yt0ARHOfWQ2s-f",
+  "BOKO_CODE-027": "https://drive.google.com/uc?export=download&id=1qbvANwI1ixvF8kA5Q0NyC3lOpt4-k3OT",
+  "DONKAMOKAM_CODE-159": "https://drive.google.com/uc?export=download&id=1CgMmUvO03z4hM2K2UwvkkiyCnFc4BwqP",
+  "HOWRAGHAT_CODE-160": "https://drive.google.com/uc?export=download&id=1Wpw7e8hjOy4g8QCq227dX1G-xA359VN-",
+  "JHARGAON_CODE-113": "https://drive.google.com/uc?export=download&id=1IFCMtjJsmPJJXVHEcuGC9regpUi0qzkW",
+  "CHARAIBAHI_CODE-112": "https://drive.google.com/uc?export=download&id=1axYCniXqluBEOF5bg3Zl-65sl9YEQ2j1",
+  "BONGAIGAON-II_CODE-035": "https://drive.google.com/uc?export=download&id=1WX_oMbEl6XfdS_azfHf4WGb1dulWFXkL",
+  "DHEKIAJULI-II_CODE-101": "https://drive.google.com/uc?export=download&id=18svEzl6-BcbbvAS6Qr89Qzi0LH-Q8Cos",
+  "GOLOKGANJ_CODE-048": "https://drive.google.com/uc?export=download&id=1TOx3diXWYp9KNl60bVZnTrSkHZp31iUC",
+  "DIPHU-II_CODE-154": "https://drive.google.com/uc?export=download&id=1KJMCoP90CzERwYPYwDUqY0hrQay0ZHUk",
+  "DHAKUAKHANA_CODE-232": "https://drive.google.com/uc?export=download&id=1yg4pqaLSMdw3VKJQMb24adRoAG6ockJd",
+  "BOKAJAN_CODE-156": "https://drive.google.com/uc?export=download&id=1kLXTe0m6S2Cz1r_WV0yDtAO4Tw8IhN_s",
+  "DIBRUGARH 1_CODE-207": "https://drive.google.com/uc?export=download&id=1nehtbExbeiAEXb7blQ8Xgj7u90LysNrZ",
+  "LAHARIGHAT_CODE-115": "https://drive.google.com/uc?export=download&id=1fhhwMOSLPHMEqHEKOLccPLA0Z9dEWZye",
+  "AGOMONI_CODE-044": "https://drive.google.com/uc?export=download&id=1VOtMSvZGWaU9DfzaYiJB4hNmYv6KmhaE",
+  "MORIGAON_CODE-114": "https://drive.google.com/uc?export=download&id=1Z_HX7Prb454WVba1Kh-Xs7efkD67RWyS",
+  "MAZBAT_CODE-088": "https://drive.google.com/uc?export=download&id=10wWRKLoqNf1McN9SPeLYVSWaziZsjbzV",
+  "DHUPDHARA_CODE-038": "https://drive.google.com/uc?export=download&id=1IuNL8GCptOTZ6rnIJ69m9rIOhEY05AzQ",
+  "DIBRUGARH2_CODE-208": "https://drive.google.com/uc?export=download&id=17wCbgIVvCkCrdL879LaUJIIGyLuh8WTf",
+  "BORDUBI_CODE-220": "https://drive.google.com/uc?export=download&id=1kEJEy_s_OBvQDZhFo4naGOMN6xhWjWHK",
+  "NOWBOICHA_CODE-229": "https://drive.google.com/uc?export=download&id=1cLVaSkX_QdpsFM0xcblL679Bk9Tthwmz",
+  "TINGKHANG_CODE-204": "https://drive.google.com/uc?export=download&id=1lsJPaNhGWIg9VRrSOxrnZ8V10asT5fYF"
+};
 
   // ===========================
   // LOGIN
@@ -247,9 +282,15 @@
   }
 
   function downloadExecutivePending(execName, subName) {
-    alert("Google limitation: This will download FULL XLSX sheet.");
-    exportXLSX();
+
+  if (!SUBDIVISION_FILE_LINKS[subName]) {
+    alert("❌ File link not found for Sub Division: " + subName);
+    return;
   }
+
+  window.open(SUBDIVISION_FILE_LINKS[subName], "_blank");
+}
+
 
   // ===========================
   // TABS
