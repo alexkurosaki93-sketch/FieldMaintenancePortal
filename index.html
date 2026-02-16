@@ -155,6 +155,67 @@
     </div>
 
   </div>
+<!-- ADMIN PANEL -->
+<div id="adminTab" class="tab-content" style="display:none;">
+
+  <h2>🛡️ Admin Panel</h2>
+
+  <div class="card">
+    <h3>Add New User</h3>
+    <input type="text" id="newUsername" placeholder="Username">
+    <input type="text" id="newPassword" placeholder="Password">
+
+    <select id="newRole">
+      <option value="ADMIN">ADMIN</option>
+      <option value="EXECUTIVE">EXECUTIVE</option>
+      <option value="TECHNICIAN">TECHNICIAN</option>
+    </select>
+<br><br>
+<button class="refresh-btn" onclick="addUserBtn()">➕ Add User</button>
+
+<hr>
+
+<h3>Reset Password</h3>
+<input type="text" id="resetUsername" placeholder="Username">
+<input type="text" id="resetNewPassword" placeholder="New Password">
+<button class="refresh-btn" onclick="resetPasswordBtn()">🔑 Reset Password</button>
+
+<hr>
+
+<h3>Delete User</h3>
+<input type="text" id="deleteUsername" placeholder="Username">
+<button class="refresh-btn" onclick="deleteUserBtn()">🗑 Delete User</button>
+
+<hr>
+
+<h3>All Users List</h3>
+<button class="refresh-btn" onclick="showUsersBtn()">📋 Load Users</button>
+
+<div id="usersListBox" style="margin-top:10px; font-size:14px;"></div>
+
+    <button onclick="handleAddUser()">Add User</button>
+  </div>
+
+  <div class="card">
+    <h3>Reset Password</h3>
+    <input type="text" id="resetUsername" placeholder="Username">
+    <input type="text" id="resetPassword" placeholder="New Password">
+    <button onclick="handleResetPassword()">Reset Password</button>
+  </div>
+
+  <div class="card">
+    <h3>Delete User</h3>
+    <input type="text" id="deleteUsername" placeholder="Username">
+    <button onclick="handleDeleteUser()">Delete User</button>
+  </div>
+
+  <div class="card">
+    <h3>View All Users</h3>
+    <button onclick="handleListUsers()">Refresh User List</button>
+    <pre id="usersListBox"></pre>
+  </div>
+
+</div>
 
   <footer>
     <p>Developed by Porag Kumar Das ❤️</p>
@@ -301,10 +362,16 @@ if (HARDCODED_USERS.length === 0) {
     container.innerHTML = "";
 
     let tabs = [
-      { id: "dashboardTab", n: "📊 Dashboard" },
-      { id: "sheetTab", n: "📑 Master Sheet" },
-      { id: "formTab", n: "📝 Submit Form" }
-    ];
+  { id: "dashboardTab", n: "📊 Dashboard" },
+  { id: "sheetTab", n: "📄 Master Sheet" },
+  { id: "formTab", n: "📝 Submit Form" }
+];
+
+// ADMIN EXTRA TAB
+if (currentRole === "ADMIN") {
+  tabs.push({ id: "adminTab", n: "🛡️ Admin Panel" });
+}
+
 
     tabs.forEach(t => {
       let b = document.createElement("button");
@@ -424,6 +491,104 @@ async function listUsersFromApp() {
   return await callUserAPI({
     action: "listUsers"
   });
+}
+// ============================
+// ADMIN PANEL BUTTON FUNCTIONS
+// ============================
+
+async function addUserBtn() {
+  let username = document.getElementById("newUsername").value.trim();
+  let password = document.getElementById("newPassword").value.trim();
+  let role = document.getElementById("newRole").value.trim();
+
+  if (!username || !password || !role) {
+    alert("❌ Please fill Username, Password and Role");
+    return;
+  }
+
+  let result = await addUserFromApp(username, password, role);
+
+  if (result.status === "success") {
+    alert("✅ User Added Successfully");
+    document.getElementById("newUsername").value = "";
+    document.getElementById("newPassword").value = "";
+    document.getElementById("newRole").value = "TECHNICIAN";
+    await loadUsersFromSheet();
+  } else {
+    alert("❌ " + result.message);
+  }
+}
+
+async function resetPasswordBtn() {
+  let username = document.getElementById("resetUsername").value.trim();
+  let newPassword = document.getElementById("resetNewPassword").value.trim();
+
+  if (!username || !newPassword) {
+    alert("❌ Enter Username and New Password");
+    return;
+  }
+
+  let result = await resetUserPassword(username, newPassword);
+
+  if (result.status === "success") {
+    alert("✅ Password Reset Successfully");
+    document.getElementById("resetUsername").value = "";
+    document.getElementById("resetNewPassword").value = "";
+    await loadUsersFromSheet();
+  } else {
+    alert("❌ " + result.message);
+  }
+}
+
+async function deleteUserBtn() {
+  let username = document.getElementById("deleteUsername").value.trim();
+
+  if (!username) {
+    alert("❌ Enter Username to delete");
+    return;
+  }
+
+  if (!confirm("⚠️ Are you sure you want to delete user: " + username + " ?")) {
+    return;
+  }
+
+  let result = await deleteUserFromApp(username);
+
+  if (result.status === "success") {
+    alert("✅ User Deleted Successfully");
+    document.getElementById("deleteUsername").value = "";
+    await loadUsersFromSheet();
+  } else {
+    alert("❌ " + result.message);
+  }
+}
+
+async function showUsersBtn() {
+  let result = await listUsersFromApp();
+
+  if (result.status !== "success") {
+    alert("❌ " + result.message);
+    return;
+  }
+
+  let box = document.getElementById("usersListBox");
+  box.innerHTML = "";
+
+  if (!result.users || result.users.length === 0) {
+    box.innerHTML = "<b>No users found</b>";
+    return;
+  }
+
+  let html = "<table border='1' cellpadding='6' style='border-collapse:collapse;width:100%;font-size:13px;'>";
+  html += "<tr style='background:#eee;font-weight:bold;'><td>Username</td><td>Role</td></tr>";
+
+  result.users.forEach(u => {
+    html += `<tr><td>${u.username}</td><td>${u.role}</td></tr>`;
+  });
+
+  html += "</table>";
+
+  box.innerHTML = html;
 }
 
   // ===========================
