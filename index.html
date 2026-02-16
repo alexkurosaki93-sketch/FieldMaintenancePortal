@@ -383,16 +383,27 @@ if (currentRole === "ADMIN") {
   }
 
   function openTab(id) {
-    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
 
-    document.getElementById(id).classList.add("active");
+  // Hide all tab contents
+  document.querySelectorAll(".tab-content").forEach(c => {
+    c.classList.remove("active");
+    c.style.display = "none";
+  });
 
-    let btns = document.querySelectorAll(".tab-btn");
-    btns.forEach(btn => {
-      if (btn.onclick.toString().includes(id)) btn.classList.add("active");
-    });
-  }
+  // Remove active from all buttons
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+
+  // Show selected tab
+  let tab = document.getElementById(id);
+  tab.classList.add("active");
+  tab.style.display = "block";
+
+  // Highlight correct button
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    if (btn.onclick.toString().includes(id)) btn.classList.add("active");
+  });
+}
+
 
   // ===========================
   // HELPERS
