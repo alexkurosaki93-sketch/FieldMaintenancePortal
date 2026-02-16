@@ -165,15 +165,10 @@
   // ===========================
   // USERS
   // ===========================
-  const HARDCODED_USERS = [
-    { username: "porag.das", password: "gknayakg07", role: "ADMIN" },
-    { username: "Rhittik.bt@maintenance.in", password: "rhittik@123", role: "ADMIN" },
-    { username: "Ritam.M@maintenance.in", password: "ritam@123", role: "ADMIN" },
-    { username: "Chandan.M@maintenance.in", password: "chandan@123", role: "ADMIN" },
-    { username: "tech1", password: "1234", role: "ADMIN" },
-    { username: "tech2", password: "1234", role: "ADMIN" },
-    { username: "tech3", password: "1234", role: "ADMIN" }
-  ];
+  const USERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ1dDHAjNy-XQZ83CgaZCvhdsd7hBvRIzl1bmErzrGzlocKS1jFFiXskGLEsPO8yiZ5SgOhLtIeBds/pub?gid=0&single=true&output=csv";
+
+let HARDCODED_USERS = [];
+;
 
   let currentUser = null;
   let currentRole = null;
