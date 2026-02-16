@@ -167,6 +167,8 @@
   // ===========================
   const USERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ1dDHAjNy-XQZ83CgaZCvhdsd7hBvRIzl1bmErzrGzlocKS1jFFiXskGLEsPO8yiZ5SgOhLtIeBds/pub?gid=0&single=true&output=csv";
 
+  const USER_API_URL = "https://script.google.com/macros/s/AKfycbw8l3yk-0KElCWH3wry1M-9XU6OusA2BqgbDsLlaH3uD7U7QFKCcAcZujvxhb9m_ni4mw/exec";
+
 let HARDCODED_USERS = [];
 
   let currentUser = null;
@@ -383,6 +385,45 @@ async function loadUsersFromSheet() {
   } catch (e) {
     alert("❌ Failed to load users list. Check users sheet publish link.");
   }
+}
+async function callUserAPI(payload) {
+  const resp = await fetch(USER_API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  return await resp.json();
+}
+
+async function addUserFromApp(username, password, role) {
+  return await callUserAPI({
+    action: "addUser",
+    username: username,
+    password: password,
+    role: role
+  });
+}
+
+async function resetUserPassword(username, newPassword) {
+  return await callUserAPI({
+    action: "resetPassword",
+    username: username,
+    newPassword: newPassword
+  });
+}
+
+async function deleteUserFromApp(username) {
+  return await callUserAPI({
+    action: "deleteUser",
+    username: username
+  });
+}
+
+async function listUsersFromApp() {
+  return await callUserAPI({
+    action: "listUsers"
+  });
 }
 
   // ===========================
