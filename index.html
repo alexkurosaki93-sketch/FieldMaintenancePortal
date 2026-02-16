@@ -1,10 +1,3 @@
-function doGet(e) {
-  try {
-    var subdivision = e.parameter.subdivision || "ALL";
-    var executive = e.parameter.executive || "ALL";
-
-    var ss = SpreadsheetApp.openById("16iKxtDhV8QBw0q6lyao1IgnBWZKsaGO4cFdx2b58dME");
-    var sheet = ss.getSheets()[0]; // Change if your data is not in first sheet
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -199,6 +192,11 @@ function doGet(e) {
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pub?gid=405039605&single=true&output=csv";
 
   // ===========================
+  // APPS SCRIPT EXPORT WEBAPP
+  // ===========================
+  const APPS_SCRIPT_EXPORT_URL = "PASTE_YOUR_APPS_SCRIPT_WEBAPP_URL_HERE";
+
+  // ===========================
   // LOGIN
   // ===========================
   function login() {
@@ -241,21 +239,31 @@ function doGet(e) {
   }
 
   // ===========================
-  // EXPORT XLSX (GOOGLE)
+  // EXPORT XLSX (FILTERED USING APPS SCRIPT)
   // ===========================
   function exportXLSX() {
-    if (SHEET_ID.includes("PASTE")) {
-      alert("❌ Sheet ID not set. Please update SHEET_ID in code.");
+    const sub = document.getElementById("subdivisionFilter").value;
+
+    if (!APPS_SCRIPT_EXPORT_URL.includes("script.google.com")) {
+      alert("❌ Apps Script Export URL not set. Please update APPS_SCRIPT_EXPORT_URL in code.");
       return;
     }
 
-    let url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx&gid=${SHEET_GID}`;
-    window.location.href = url;
+    let url = APPS_SCRIPT_EXPORT_URL + "?subdivision=" + encodeURIComponent(sub || "ALL");
+    window.open(url, "_blank");
   }
 
   function downloadExecutivePending(execName, subName) {
-    alert("Google limitation: This will download FULL XLSX sheet.");
-    exportXLSX();
+    if (!APPS_SCRIPT_EXPORT_URL.includes("script.google.com")) {
+      alert("❌ Apps Script Export URL not set. Please update APPS_SCRIPT_EXPORT_URL in code.");
+      return;
+    }
+
+    let url = APPS_SCRIPT_EXPORT_URL
+              + "?subdivision=" + encodeURIComponent(subName)
+              + "&executive=" + encodeURIComponent(execName);
+
+    window.open(url, "_blank");
   }
 
   // ===========================
@@ -548,61 +556,3 @@ function doGet(e) {
 
 </body>
 </html>
-    var data = sheet.getDataRange().getValues();
-
-    if (data.length < 2) {
-      return ContentService.createTextOutput("No data found.");
-    }
-
-    var headers = data[0];
-    var rows = data.slice(1);
-
-    // Find column index for Executive and Sub Division
-    var execIndex = headers.indexOf("Executive");
-    var subIndex = headers.indexOf("Sub Division");
-
-    // If headers are different in your sheet, set manually
-    if (execIndex === -1) execIndex = 0;   // Your HTML uses row[0] for Exec
-    if (subIndex === -1) subIndex = 3;     // Your HTML uses row[3] for Sub Division
-
-    var filtered = rows.filter(function(r) {
-      var execMatch = (executive === "ALL") || (String(r[execIndex]).trim() === executive);
-      var subMatch = (subdivision === "ALL") || (String(r[subIndex]).trim() === subdivision);
-      return execMatch && subMatch;
-    });
-
-    // Create temp spreadsheet
-    var tempSS = SpreadsheetApp.create("Filtered_Export");
-    var tempSheet = tempSS.getActiveSheet();
-
-    tempSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-
-    if (filtered.length > 0) {
-      tempSheet.getRange(2, 1, filtered.length, headers.length).setValues(filtered);
-    }
-
-    // Export temp spreadsheet as XLSX
-    var fileId = tempSS.getId();
-    var url = "https://docs.google.com/spreadsheets/d/" + fileId + "/export?format=xlsx";
-
-    var token = ScriptApp.getOAuthToken();
-    var response = UrlFetchApp.fetch(url, {
-      headers: {
-        "Authorization": "Bearer " + token
-      }
-    });
-
-    var fileName = "Report_" + subdivision.replace(/[^a-zA-Z0-9]/g, "_") + ".xlsx";
-
-    // Delete temp spreadsheet after export
-    DriveApp.getFileById(fileId).setTrashed(true);
-
-    return ContentService
-      .createTextOutput(response.getContent())
-      .setMimeType(ContentService.MimeType.MICROSOFT_EXCEL)
-      .setHeader("Content-Disposition", "attachment; filename=" + fileName);
-
-  } catch (err) {
-    return ContentService.createTextOutput("ERROR: " + err.message);
-  }
-}
