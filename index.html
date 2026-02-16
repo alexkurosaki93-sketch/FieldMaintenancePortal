@@ -1,543 +1,66 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Field Maintenance Portal</title>
+function doGet(e) {
+  try {
+    var subdivision = e.parameter.subdivision || "ALL";
+    var executive = e.parameter.executive || "ALL";
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    var ss = SpreadsheetApp.openById("16iKxtDhV8QBw0q6lyao1IgnBWZKsaGO4cFdx2b58dME");
+    var sheet = ss.getSheets()[0]; // Change if your data is not in first sheet
 
-  <style>
-    body {font-family: Arial, sans-serif; margin:0; background:#f4f6f9; color:#222;}
-    header {text-align:center; padding:15px; background:#1e293b; color:white;}
-    header h2 {margin:5px; font-size:22px;}
-    header p {margin:0; font-size:14px; opacity:0.9;}
-    .container {padding:15px;}
-    .tabs {display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;}
-    .tab-btn {flex:1; padding:12px; border:none; background:#e2e8f0; color:#111; font-size:15px; border-radius:10px; cursor:pointer; font-weight:bold; min-width:120px;}
-    .tab-btn.active {background:#2563eb; color:white;}
-    .tab-content {display:none;}
-    .tab-content.active {display:block;}
-    .refresh-btn {width:100%; padding:12px; border:none; background:#2563eb; color:white; font-size:15px; border-radius:10px; cursor:pointer; margin-bottom:15px;}
-    .logout-btn {width:100%; padding:12px; border:none; background:#ef4444; color:white; font-size:15px; border-radius:10px; cursor:pointer; margin-bottom:15px; font-weight:bold;}
-    .status {text-align:center; font-size:13px; margin-bottom:10px; font-weight:bold;}
-    .kpi-grid {display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-bottom:15px;}
-    .kpi-card {background:white; padding:15px; border-radius:12px; text-align:center; box-shadow:0px 2px 8px rgba(0,0,0,0.1);}
-    .kpi-card h3 {font-size:14px; margin:0; color:#555;}
-    .kpi-card p {font-size:22px; margin:8px 0 0; font-weight:bold; color:#2563eb;}
-    .chart-area {display:grid; grid-template-columns:1fr; gap:15px;}
-    .chart-box {background:white; padding:15px; border-radius:12px; box-shadow:0px 2px 8px rgba(0,0,0,0.1); height:auto; min-height:360px;}
-    .chart-box canvas {max-height:280px !important;}
-    .table-area {margin-top:20px; background:white; padding:15px; border-radius:12px; overflow-x:auto; box-shadow:0px 2px 8px rgba(0,0,0,0.1);}
-    table {width:100%; border-collapse:collapse; font-size:13px;}
-    thead {background:#2563eb; color:white;}
-    th, td {padding:10px; border:1px solid #ddd; text-align:center;}
-    footer {text-align:center; padding:12px; background:#0f172a; color:white; margin-top:20px;}
-    .smalltext {font-size:12px; opacity:0.8;}
-    .filter-box {display:flex; flex-wrap:wrap; gap:10px; margin-bottom:15px;}
-    select, input {padding:10px; border-radius:8px; border:1px solid #ccc; font-size:14px; flex:1; min-width:180px;}
-    .export-btn {padding:10px; border:none; background:#16a34a; color:white; font-weight:bold; border-radius:8px; cursor:pointer; flex:1; min-width:180px;}
-    .download-btn {padding:6px 10px; background:#16a34a; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;}
+    var data = sheet.getDataRange().getValues();
 
-    .login-box {max-width:420px; margin:40px auto; background:white; padding:25px; border-radius:15px; box-shadow:0px 2px 10px rgba(0,0,0,0.15); text-align:center;}
-    .login-box input {width:100%; margin-top:12px; padding:12px; font-size:15px; border-radius:10px; border:1px solid #ccc; box-sizing:border-box;}
-    .login-btn {width:100%; margin-top:15px; padding:12px; border:none; background:#2563eb; color:white; font-size:15px; border-radius:10px; cursor:pointer; font-weight:bold;}
-    .error-text {color:red; font-size:13px; margin-top:10px; font-weight:bold;}
-
-    .form-card {text-align:center; padding:30px; background:white; border-radius:12px; box-shadow:0px 2px 8px rgba(0,0,0,0.1);}
-    .form-btn {display:inline-block; padding:15px 25px; background:#2563eb; color:white; border-radius:12px; text-decoration:none; font-size:16px; font-weight:bold; margin-top:15px;}
-  </style>
-</head>
-
-<body>
-
-<!-- LOGIN -->
-<div id="loginScreen" class="login-box">
-  <h2>🔐 Field Maintenance Portal</h2>
-  <p>Please login to continue</p>
-
-  <input type="text" id="loginUsername" placeholder="Enter Username"/>
-  <input type="password" id="loginPassword" placeholder="Enter Password"/>
-
-  <button class="login-btn" onclick="login()">Login</button>
-
-  <div id="loginMsg" class="error-text"></div>
-</div>
-
-<!-- APP -->
-<div id="appScreen" style="display:none;">
-  <header>
-    <h2>📊 Field Maintenance Portal</h2>
-    <p id="welcomeText">Welcome</p>
-  </header>
-
-  <div class="container">
-
-    <button class="logout-btn" onclick="logout()">🚪 Logout</button>
-
-    <!-- TAB BUTTONS -->
-    <div class="tabs" id="tabButtons"></div>
-
-    <!-- DASHBOARD -->
-    <div id="dashboardTab" class="tab-content">
-
-      <button class="refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
-      <div class="status" id="statusText">Loading data...</div>
-
-      <div class="kpi-grid">
-        <div class="kpi-card"><h3>Total MI</h3><p id="kpi_total">0</p></div>
-        <div class="kpi-card"><h3>Comm</h3><p id="kpi_comm">0</p></div>
-        <div class="kpi-card"><h3>Non Comm</h3><p id="kpi_noncomm">0</p></div>
-        <div class="kpi-card"><h3>Never Comm</h3><p id="kpi_nevercomm">0</p></div>
-        <div class="kpi-card"><h3>Pending %</h3><p id="kpi_pending_pct">0%</p></div>
-        <div class="kpi-card"><h3>Comm %</h3><p id="kpi_comm_pct">0%</p></div>
-      </div>
-
-      <div class="chart-area">
-        <div class="chart-box">
-          <h3>Communication Status Breakdown</h3>
-          <canvas id="statusChart"></canvas>
-        </div>
-
-        <div class="chart-box">
-          <h3>Top 15 Sub Division Wise Pending</h3>
-          <canvas id="subdivisionChart"></canvas>
-        </div>
-      </div>
-
-      <div class="table-area">
-        <h3>📋 Executive + Sub Division Pending Summary</h3>
-        <p class="smalltext">Download button will download FULL XLSX sheet (Google limitation).</p>
-
-        <table id="summaryTable">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- MASTER SHEET -->
-    <div id="sheetTab" class="tab-content">
-      <h3>📑 Master Sheet View</h3>
-
-      <div class="filter-box">
-        <select id="subdivisionFilter" onchange="renderFullTable()">
-          <option value="">All Sub Divisions</option>
-        </select>
-
-        <input type="text" id="searchBox" placeholder="Search anything..." onkeyup="renderFullTable()"/>
-
-        <button class="export-btn" onclick="exportXLSX()">⬇ Export XLSX</button>
-      </div>
-
-      <div class="table-area">
-        <table id="fullDataTable">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
-        <p class="smalltext">Showing max 200 rows for performance.</p>
-      </div>
-    </div>
-
-    <!-- FORM -->
-    <div id="formTab" class="tab-content">
-      <div class="form-card">
-        <h2>📝 Submit Field Report</h2>
-        <p class="smalltext">Please open the form in your browser.</p>
-
-        <a class="form-btn"
-           href="https://docs.google.com/forms/d/e/1FAIpQLSdrEm24HgilvW_FcRx_hMwIFS-1htDyqj_R30ov9T8ObCENSQ/viewform"
-           target="_blank">
-           ✅ Open Google Form
-        </a>
-      </div>
-    </div>
-
-  </div>
-
-  <footer>
-    <p>Developed by Porag Kumar Das ❤️</p>
-  </footer>
-</div>
-
-<script>
-  // ===========================
-  // USERS
-  // ===========================
-  const HARDCODED_USERS = [
-    { username: "porag.das", password: "gknayakg07", role: "ADMIN" },
-    { username: "Rhittik.bt@maintenance.in", password: "rhittik@123", role: "ADMIN" },
-    { username: "Ritam.M@maintenance.in", password: "ritam@123", role: "ADMIN" },
-    { username: "executive3", password: "1234", role: "ADMIN" },
-    { username: "tech1", password: "1234", role: "ADMIN" },
-    { username: "tech2", password: "1234", role: "ADMIN" },
-    { username: "tech3", password: "1234", role: "ADMIN" }
-  ];
-
-  let currentUser = null;
-  let currentRole = null;
-
-  let statusChart, subdivisionChart;
-  let masterData = [];
-  let rawHeaders = [];
-
-  // ===========================
-  // GOOGLE SHEET SETTINGS
-  // ===========================
-  const SHEET_ID = "16iKxtDhV8QBw0q6lyao1IgnBWZKsaGO4cFdx2b58dME";   // <-- MUST CHANGE THIS
-  const SHEET_GID = "405039605";                 // <-- YOUR CURRENT GID
-
-  const DATA_URL =
-    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pub?gid=405039605&single=true&output=csv";
-
-  // ===========================
-  // LOGIN
-  // ===========================
-  function login() {
-    let u = document.getElementById("loginUsername").value.trim();
-    let p = document.getElementById("loginPassword").value.trim();
-
-    document.getElementById("loginMsg").innerText = "";
-
-    let found = HARDCODED_USERS.find(user => user.username === u && user.password === p);
-
-    if (!found) {
-      document.getElementById("loginMsg").innerText = "❌ Invalid Credentials";
-      return;
+    if (data.length < 2) {
+      return ContentService.createTextOutput("No data found.");
     }
 
-    currentUser = found.username;
-    currentRole = found.role;
+    var headers = data[0];
+    var rows = data.slice(1);
 
-    localStorage.setItem("logged_user", currentUser);
-    localStorage.setItem("logged_role", currentRole);
+    // Find column index for Executive and Sub Division
+    var execIndex = headers.indexOf("Executive");
+    var subIndex = headers.indexOf("Sub Division");
 
-    showApp();
-  }
+    // If headers are different in your sheet, set manually
+    if (execIndex === -1) execIndex = 0;   // Your HTML uses row[0] for Exec
+    if (subIndex === -1) subIndex = 3;     // Your HTML uses row[3] for Sub Division
 
-  function logout() {
-    localStorage.removeItem("logged_user");
-    localStorage.removeItem("logged_role");
-    location.reload();
-  }
+    var filtered = rows.filter(function(r) {
+      var execMatch = (executive === "ALL") || (String(r[execIndex]).trim() === executive);
+      var subMatch = (subdivision === "ALL") || (String(r[subIndex]).trim() === subdivision);
+      return execMatch && subMatch;
+    });
 
-  function showApp() {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("appScreen").style.display = "block";
+    // Create temp spreadsheet
+    var tempSS = SpreadsheetApp.create("Filtered_Export");
+    var tempSheet = tempSS.getActiveSheet();
 
-    document.getElementById("welcomeText").innerText = "Welcome " + currentUser;
+    tempSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
 
-    buildTabsByRole();
-    openTab("dashboardTab");
-    loadData();
-  }
-
-  // ===========================
-  // EXPORT XLSX (GOOGLE)
-  // ===========================
-  function exportXLSX() {
-    if (SHEET_ID.includes("PASTE")) {
-      alert("❌ Sheet ID not set. Please update SHEET_ID in code.");
-      return;
+    if (filtered.length > 0) {
+      tempSheet.getRange(2, 1, filtered.length, headers.length).setValues(filtered);
     }
 
-    let url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx&gid=${SHEET_GID}`;
-    window.location.href = url;
-  }
+    // Export temp spreadsheet as XLSX
+    var fileId = tempSS.getId();
+    var url = "https://docs.google.com/spreadsheets/d/" + fileId + "/export?format=xlsx";
 
-  function downloadExecutivePending(execName, subName) {
-    alert("Google limitation: This will download FULL XLSX sheet.");
-    exportXLSX();
-  }
-
-  // ===========================
-  // TABS
-  // ===========================
-  function buildTabsByRole() {
-    let container = document.getElementById("tabButtons");
-    container.innerHTML = "";
-
-    let tabs = [
-      { id: "dashboardTab", n: "📊 Dashboard" },
-      { id: "sheetTab", n: "📑 Master Sheet" },
-      { id: "formTab", n: "📝 Submit Form" }
-    ];
-
-    tabs.forEach(t => {
-      let b = document.createElement("button");
-      b.className = "tab-btn";
-      b.innerText = t.n;
-      b.onclick = () => openTab(t.id);
-      container.appendChild(b);
-    });
-  }
-
-  function openTab(id) {
-    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-
-    document.getElementById(id).classList.add("active");
-
-    let btns = document.querySelectorAll(".tab-btn");
-    btns.forEach(btn => {
-      if (btn.onclick.toString().includes(id)) btn.classList.add("active");
-    });
-  }
-
-  // ===========================
-  // HELPERS
-  // ===========================
-  function cleanText(v) {
-    return v ? String(v).trim() : "";
-  }
-
-  function normalizeStatus(s) {
-    s = cleanText(s).toLowerCase();
-    if (s.includes("never")) return "Never Comm";
-    if (s.includes("non")) return "Non Comm";
-    return "Comm";
-  }
-
-  function parseCSVLine(line) {
-    let res = [];
-    let cur = "";
-    let inQ = false;
-
-    for (let i = 0; i < line.length; i++) {
-      let c = line[i];
-
-      if (c === '"' && line[i + 1] === '"') {
-        cur += '"';
-        i++;
-      } else if (c === '"') {
-        inQ = !inQ;
-      } else if (c === "," && !inQ) {
-        res.push(cur);
-        cur = "";
-      } else {
-        cur += c;
-      }
-    }
-
-    res.push(cur);
-    return res;
-  }
-
-  // ===========================
-  // LOAD DATA
-  // ===========================
-  async function loadData() {
-    document.getElementById("statusText").innerText = "Loading...";
-
-    try {
-      const resp = await fetch(DATA_URL + "&cb=" + Date.now());
-      const text = await resp.text();
-      const lines = text.split("\n").filter(l => l.trim() !== "");
-
-      rawHeaders = parseCSVLine(lines[0]);
-      masterData = lines.slice(1).map(l => parseCSVLine(l));
-
-      const dashboardData = masterData
-        .filter(row => cleanText(row[row.length - 1]).toLowerCase().includes("mi"))
-        .map(row => ({
-          Exec: cleanText(row[0]),
-          Sub: cleanText(row[3]),
-          Status: normalizeStatus(row[13])
-        }));
-
-      updateDashboard(dashboardData);
-      populateSubDivisionDropdown();
-      renderFullTable();
-
-      document.getElementById("statusText").innerText =
-        "✅ Updated: " + new Date().toLocaleTimeString();
-
-    } catch (e) {
-      document.getElementById("statusText").innerText = "❌ Load Error";
-      alert("Data Load Failed. Please check your internet or sheet publishing.");
-    }
-  }
-
-  // ===========================
-  // DASHBOARD
-  // ===========================
-  function updateDashboard(data) {
-    const total = data.length;
-    const comm = data.filter(x => x.Status === "Comm").length;
-    const non = data.filter(x => x.Status === "Non Comm").length;
-    const never = data.filter(x => x.Status === "Never Comm").length;
-    const pending = non + never;
-
-    document.getElementById("kpi_total").innerText = total;
-    document.getElementById("kpi_comm").innerText = comm;
-    document.getElementById("kpi_noncomm").innerText = non;
-    document.getElementById("kpi_nevercomm").innerText = never;
-    document.getElementById("kpi_pending_pct").innerText =
-      total ? ((pending / total) * 100).toFixed(1) + "%" : "0%";
-    document.getElementById("kpi_comm_pct").innerText =
-      total ? ((comm / total) * 100).toFixed(1) + "%" : "0%";
-
-    renderCharts(comm, non, never, data);
-    renderSummary(data);
-  }
-
-  function renderCharts(c, n, nv, data) {
-    const ctx1 = document.getElementById("statusChart").getContext("2d");
-    if (statusChart) statusChart.destroy();
-
-    statusChart = new Chart(ctx1, {
-      type: "pie",
-      data: {
-        labels: ["Comm", "Non Comm", "Never Comm"],
-        datasets: [{
-          data: [c, n, nv],
-          backgroundColor: ["#22c55e", "#f97316", "#ef4444"]
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: "bottom" },
-          datalabels: {
-            color: "#fff",
-            font: { weight: "bold" },
-            formatter: function(value, ctx) {
-              let total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-              let pct = total ? ((value / total) * 100).toFixed(1) : 0;
-              return pct + "%";
-            }
-          }
-        }
-      },
-      plugins: [ChartDataLabels]
-    });
-
-    const subMap = {};
-    data.forEach(x => {
-      if (!subMap[x.Sub]) subMap[x.Sub] = { n: 0, nv: 0 };
-      if (x.Status === "Non Comm") subMap[x.Sub].n++;
-      if (x.Status === "Never Comm") subMap[x.Sub].nv++;
-    });
-
-    const sortedSubs = Object.keys(subMap)
-      .sort((a, b) => (subMap[b].n + subMap[b].nv) - (subMap[a].n + subMap[a].nv))
-      .slice(0, 15);
-
-    const ctx2 = document.getElementById("subdivisionChart").getContext("2d");
-    if (subdivisionChart) subdivisionChart.destroy();
-
-    subdivisionChart = new Chart(ctx2, {
-      type: "bar",
-      data: {
-        labels: sortedSubs,
-        datasets: [
-          { label: "Non Comm", data: sortedSubs.map(s => subMap[s].n), backgroundColor: "#f97316" },
-          { label: "Never Comm", data: sortedSubs.map(s => subMap[s].nv), backgroundColor: "#ef4444" }
-        ]
-      },
-      options: {
-        responsive: true,
-        indexAxis: "y",
-        plugins: { legend: { position: "bottom" } },
-        scales: { x: { stacked: true }, y: { stacked: true } }
+    var token = ScriptApp.getOAuthToken();
+    var response = UrlFetchApp.fetch(url, {
+      headers: {
+        "Authorization": "Bearer " + token
       }
     });
+
+    var fileName = "Report_" + subdivision.replace(/[^a-zA-Z0-9]/g, "_") + ".xlsx";
+
+    // Delete temp spreadsheet after export
+    DriveApp.getFileById(fileId).setTrashed(true);
+
+    return ContentService
+      .createTextOutput(response.getContent())
+      .setMimeType(ContentService.MimeType.MICROSOFT_EXCEL)
+      .setHeader("Content-Disposition", "attachment; filename=" + fileName);
+
+  } catch (err) {
+    return ContentService.createTextOutput("ERROR: " + err.message);
   }
-
-  // ===========================
-  // SUMMARY TABLE
-  // ===========================
-  function renderSummary(data) {
-    const sum = {};
-
-    data.forEach(x => {
-      const k = x.Exec + "|" + x.Sub;
-      if (!sum[k]) sum[k] = { e: x.Exec, s: x.Sub, n: 0, nv: 0 };
-      if (x.Status === "Non Comm") sum[k].n++;
-      if (x.Status === "Never Comm") sum[k].nv++;
-    });
-
-    document.querySelector("#summaryTable thead").innerHTML =
-      "<tr><th>Executive</th><th>Sub Division</th><th>Non Comm</th><th>Never Comm</th><th>Total Pending</th><th>Download XLSX</th></tr>";
-
-    const body = document.querySelector("#summaryTable tbody");
-    body.innerHTML = "";
-
-    Object.values(sum)
-      .sort((a, b) => (b.n + b.nv) - (a.n + a.nv))
-      .forEach(r => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${r.e}</td>
-          <td>${r.s}</td>
-          <td>${r.n}</td>
-          <td>${r.nv}</td>
-          <td>${r.n + r.nv}</td>
-          <td>
-            <button class="download-btn"
-              onclick="downloadExecutivePending('${r.e}','${r.s}')">
-              Download
-            </button>
-          </td>
-        `;
-        body.appendChild(tr);
-      });
-  }
-
-  // ===========================
-  // DROPDOWN
-  // ===========================
-  function populateSubDivisionDropdown() {
-    const list = [...new Set(masterData.map(r => cleanText(r[3])))]
-      .filter(Boolean)
-      .sort();
-
-    const d = document.getElementById("subdivisionFilter");
-    d.innerHTML = '<option value="">All Sub Divisions</option>';
-
-    list.forEach(s => {
-      d.innerHTML += `<option value="${s}">${s}</option>`;
-    });
-  }
-
-  // ===========================
-  // FULL TABLE
-  // ===========================
-  function renderFullTable() {
-    const sub = document.getElementById("subdivisionFilter").value;
-    const search = document.getElementById("searchBox").value.toLowerCase();
-
-    document.querySelector("#fullDataTable thead").innerHTML =
-      "<tr>" + rawHeaders.map(h => `<th>${h}</th>`).join("") + "</tr>";
-
-    const body = document.querySelector("#fullDataTable tbody");
-    body.innerHTML = "";
-
-    let count = 0;
-
-    for (let r of masterData) {
-      if (sub && cleanText(r[3]) !== sub) continue;
-      if (search && !r.join(" ").toLowerCase().includes(search)) continue;
-
-      body.innerHTML += "<tr>" + r.map(c => `<td>${cleanText(c)}</td>`).join("") + "</tr>";
-
-      count++;
-      if (count >= 200) break;
-    }
-  }
-
-  // ===========================
-  // AUTO LOGIN
-  // ===========================
-  window.onload = () => {
-    if (localStorage.getItem("logged_user")) {
-      currentUser = localStorage.getItem("logged_user");
-      currentRole = localStorage.getItem("logged_role");
-      showApp();
-    }
-  };
-</script>
-
-</body>
-</html>
+}
