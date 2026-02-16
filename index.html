@@ -168,7 +168,6 @@
   const USERS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSQ1dDHAjNy-XQZ83CgaZCvhdsd7hBvRIzl1bmErzrGzlocKS1jFFiXskGLEsPO8yiZ5SgOhLtIeBds/pub?gid=0&single=true&output=csv";
 
 let HARDCODED_USERS = [];
-;
 
   let currentUser = null;
   let currentRole = null;
@@ -224,11 +223,15 @@ const SUBDIVISION_FILE_LINKS = {
   // ===========================
   // LOGIN
   // ===========================
-  function login() {
+  async function login() {
     let u = document.getElementById("loginUsername").value.trim();
     let p = document.getElementById("loginPassword").value.trim();
 
     document.getElementById("loginMsg").innerText = "";
+    
+if (HARDCODED_USERS.length === 0) {
+  await loadUsersFromSheet();
+}
 
     let found = HARDCODED_USERS.find(user => user.username === u && user.password === p);
 
@@ -360,6 +363,27 @@ const SUBDIVISION_FILE_LINKS = {
     res.push(cur);
     return res;
   }
+async function loadUsersFromSheet() {
+  try {
+    const resp = await fetch(USERS_CSV_URL + "&cb=" + Date.now());
+    const text = await resp.text();
+
+    const lines = text.split("\n").filter(l => l.trim() !== "");
+    const rows = lines.slice(1).map(l => parseCSVLine(l));
+
+    HARDCODED_USERS = rows.map(r => ({
+      username: (r[0] || "").trim(),
+      password: (r[1] || "").trim(),
+      role: (r[2] || "").trim(),
+      subdivision: (r[3] || "ALL").trim()
+    }));
+
+    console.log("Users Loaded:", HARDCODED_USERS);
+
+  } catch (e) {
+    alert("❌ Failed to load users list. Check users sheet publish link.");
+  }
+}
 
   // ===========================
   // LOAD DATA
