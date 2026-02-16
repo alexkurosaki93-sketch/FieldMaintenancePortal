@@ -192,11 +192,6 @@
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vQNuAp9IwF1UnVU4INnUt0IaHcBVA5c7EFYKMBTVXjC0fC4Wbv2_20cJUSUQk3iQ7RQt_e8BwLjrp0Y/pub?gid=405039605&single=true&output=csv";
 
   // ===========================
-  // APPS SCRIPT EXPORT WEBAPP
-  // ===========================
-  const APPS_SCRIPT_EXPORT_URL = "https://script.google.com/macros/s/AKfycbz_ZhSShcS1aLj-P9VwOadFV3MPc3_1bbVIphu1gtssR0_8GDbhupHzYSCgbnB5EJ9X/exec";
-
-  // ===========================
   // LOGIN
   // ===========================
   function login() {
@@ -239,31 +234,21 @@
   }
 
   // ===========================
-  // EXPORT XLSX (FILTERED USING APPS SCRIPT)
+  // EXPORT XLSX (GOOGLE)
   // ===========================
   function exportXLSX() {
-    const sub = document.getElementById("subdivisionFilter").value;
-
-    if (!APPS_SCRIPT_EXPORT_URL.includes("script.google.com")) {
-      alert("❌ Apps Script Export URL not set. Please update APPS_SCRIPT_EXPORT_URL in code.");
+    if (SHEET_ID.includes("PASTE")) {
+      alert("❌ Sheet ID not set. Please update SHEET_ID in code.");
       return;
     }
 
-    let url = APPS_SCRIPT_EXPORT_URL + "?subdivision=" + encodeURIComponent(sub || "ALL");
-    window.open(url, "_blank");
+    let url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx&gid=${SHEET_GID}`;
+    window.location.href = url;
   }
 
   function downloadExecutivePending(execName, subName) {
-    if (!APPS_SCRIPT_EXPORT_URL.includes("script.google.com")) {
-      alert("❌ Apps Script Export URL not set. Please update APPS_SCRIPT_EXPORT_URL in code.");
-      return;
-    }
-
-    let url = APPS_SCRIPT_EXPORT_URL
-              + "?subdivision=" + encodeURIComponent(subName)
-              + "&executive=" + encodeURIComponent(execName);
-
-    window.open(url, "_blank");
+    alert("Google limitation: This will download FULL XLSX sheet.");
+    exportXLSX();
   }
 
   // ===========================
